@@ -1,0 +1,128 @@
+## PHImageRequestOptions测试数据
+
+-   前置条件：targetSize: CGSize(width: 320, height: 320)  contentMode: .aspectFill,
+-   isSynchronous= true
+    -   deliveryMode = .opportunistic
+        -   resizeMode = .none
+            -   调用次数：**1次**
+            -   原图大小：**width= 1125 height = 2436** 获取图片大小： **width = 360.0 height = 780.0** 
+            -   imageData：**205312**
+        -   resizeMode = .fast
+            -   调用次数：**1次**
+            -   原图大小：**width= 1125 height = 2436** 获取图片大小：**width = 320.0 height = 692.0**
+            -   imageData：**173730** 
+        -   resizeMode = .extra
+            -   调用次数：**1次**
+            -   原图大小：**width= 1125 height = 2436** 获取图片大小：**width = 320.0 height = 320.0**
+            -   imageData：**67499**
+    -   deliveryMode = .highQualityFormat
+        -   resizeMode = .none
+            -   调用次数：**1次**
+            -   原图大小：**width= 1125 height = 2436** 获取图片大小： **width = 360.0 height = 780.0** 
+            -   imageData：**205312**
+        -   resizeMode = .fast
+            -   调用次数：**1次**
+            -   原图大小：**width= 1125 height = 2436** 获取图片大小： **width = 320.0 height = 692.0** 
+            -   imageData：**173730**
+        -   resizeMode = .extra
+            -   调用次数：**1次**
+            -   原图大小：**width= 1125 height = 2436** 获取图片大小： **width = 360.0 height = 780.0** 
+            -   imageData：**67499**
+    -   deliveryMode = .fastFormat
+        -   resizeMode = .none
+            -   调用次数：**1次**
+            -   原图大小：**width= 1125 height = 2436** 获取图片大小：**width = 55.0 height = 120.0** 
+            -   imageData：**5265**
+        -   resizeMode = .fast
+            -   调用次数：**1次**
+            -   原图大小：**width= 1125 height = 2436** 获取图片大小：**width = 55.0 height = 120.0** 
+            -   imageData：**5265**
+        -   resizeMode = .extra
+            -   调用次数：**1次**
+            -   原图大小：**width= 1125 height = 2436** 获取图片大小： **width = 55.0 height = 120.0** 
+            -   imageData：**5265**
+-   isSynchronous = false
+    -   deliveryMode = .opportunistic
+        -   resizeMode = .none
+            -   调用次数：**2次**
+            -   第一次
+                -   原图大小：**width= 1125 height = 2436** 获取图片大小： **width = 55.0 height = 120.0** 
+                -   imageData：**5265**
+            -   第二次
+                -   原图大小：**width= 1125 height = 2436** 获取图片大小： **width = 360.0 height = 780.0** 
+                -   imageData：**205312**
+        -   resizeMode = .fast
+            -   调用次数：**2次**
+            -   第一次
+                -   原图大小：**width= 1125 height = 2436** 获取图片大小： **width = 55.0 height = 120.0** 
+                -   imageData：**5265**
+            -   第二次
+                -   原图大小：**width= 1125 height = 2436** 获取图片大小：**width = 320.0 height = 692.0** 
+                -   imageData：**173730**
+        -   resizeMode = .extra
+            -   调用次数：**2次**
+            -   第一次
+                -   原图大小：**width= 1125 height = 2436** 获取图片大小： **width = 55.0 height = 120.0** 
+                -   imageData：**5265**
+            -   第二次
+                -   原图大小：**width= 1125 height = 2436** 获取图片大小：**width = 320.0 height = 320.0** 
+                -   imageData：**67499**
+    -   deliveryMode = .highQualityFormat
+        -   resizeMode = .none
+            -   调用次数：**1次**
+            -   原图大小：**width= 1125 height = 2436** 获取图片大小： **width = 360.0 height = 780.0** 
+            -   imageData：**205312**
+        -   resizeMode = .fast
+            -   调用次数：**1次**
+            -   原图大小：**width= 1125 height = 2436** 获取图片大小：**width = 320.0 height = 692.0** 
+            -   imageData：**173730**
+        -   resizeMode = .extra
+            -   调用次数：**1次**
+            -   原图大小：**width= 1125 height = 2436** 获取图片大小：**width = 320.0 height = 320.0** 
+            -   imageData：**67499**
+    -   deliveryMode = .fastFormat
+        -   resizeMode = .none
+            -   调用次数：**1次**
+            -   原图大小：**width= 1125 height = 2436** 获取图片大小：**width = 55.0 height = 120.0** 
+            -   imageData：**5265**
+        -   resizeMode = .fast
+            -   调用次数：**1次**
+            -   原图大小：**width= 1125 height = 2436** 获取图片大小：**width = 55.0 height = 120.0** 
+            -   imageData：**5265**
+        -   resizeMode = .extra
+            -   调用次数：**1次**
+            -   原图大小：**width= 1125 height = 2436** 获取图片大小：**width = 55.0 height = 120.0** 
+            -   imageData：**5265**
+
+
+
+## 结论
+
+-   在synchronous = true条件下
+    -   deliveryMode = .highQualityFormat和.opportunistic 效果是一样的，返回的结果是一致的
+        -   resizeMode = .none: 在给定的targetSize中，按照contenMode进行等比例缩放，最优的图片，图片大小有可能大于targetSize
+        -   resizeMode = .fast: 在给定的targetSize中，按照contenMode进行等比例缩放，然后根据这个大小去获取低质量图片，图片大小有可能大于targetSize
+        -   resizeMode = .extra: 在给定的targetSize中，按照contenMode进行等比例缩放，然后根据这个大小去获取高质量图片，图片大小等于targetSize
+    -   deliveryMode = .fastFormat
+        -   resizeMode = .none、resizeMode = .fast、resizeMode = .extra: 三个选择下，获取结果是一致，都是等比例最小的低质量图片
+
+-   在synchronous = false条件下
+    -   deliveryMode = .opportunistic
+        -   resizeMode = .none: 返回两次结果
+            -   第一次：返回最低质量、按照比例大小最小的的图片
+            -   第二次：和synchronous = true条件结果一致
+        -   resizeMode = .fast: 返回两次结果
+            -   第一次：返回最低质量、按照比例大小最小的的图片
+            -   第二次：和synchronous = true条件结果一致
+        -   resizeMode = .extra: 返回两次结果
+            -   第一次：返回最低质量、按照比例大小最小的的图片
+            -   第二次：和synchronous = true条件结果一致
+    -   deliveryMode = .highQualityFormat
+        -   和synchronous = true条件结果一致
+    -   deliveryMode = .fastFormat
+        -   和synchronous = true条件结果一致
+
+
+
+-   在synchronous = false条件下，deliveryMode = .opportunistic等于 .highQualityFormat + .fastFormat结果之和。第一次返回.fastFormat结果，第二次返回 .highQualityFormat 结果。
+-   在deliveryMode = .highQualityFormat 和 .fastFormat条件下，获取结果一致，只是synchronous = false和synchronous = true的区别就是，是否阻塞主线程
