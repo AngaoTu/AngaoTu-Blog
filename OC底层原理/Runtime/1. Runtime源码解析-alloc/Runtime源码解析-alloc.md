@@ -305,7 +305,7 @@ static inline uint32_t word_align(uint32_t x) {
 - 通过调用可知`void *zone`传入的是0，所有这里会调用`calloc`方法
 
 - 首先通过`instanceSize`计算出内存大小，然后向系统申请对应大小，返回给`obj`
-- `calloc`具体底层实现
+- `calloc`具体底层实现，可阅读[iOS中calloc和malloc源码分析](https://github.com/AngaoTu/AngaoTu-Blog/blob/main/OC%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/iOS%E4%B8%ADmalloc%E5%92%8Ccalloc%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90.md)
 
 #### initInstanceIsa/initIsa：内存和类关联
 
