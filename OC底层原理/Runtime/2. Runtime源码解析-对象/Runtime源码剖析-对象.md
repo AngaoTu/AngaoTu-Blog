@@ -9,6 +9,13 @@
     - [isa_t](#isa_t)
       - [ISA_BITFIELD](#isa_bitfield)
       - [总结](#总结)
+    - [Isa_t初始流程](#isa_t初始流程)
+      - [initInstanceIsa](#initinstanceisa)
+      - [initIsa](#initisa)
+        - [newisa.bits](#newisabits)
+        - [newisa.has_cxx_dtor](#newisahas_cxx_dtor)
+        - [newisa.setClass](#newisasetclass)
+        - [newisa.extra_rc](#newisaextra_rc)
 
 # Runtime源码剖析-对象
 
@@ -177,10 +184,167 @@ public:
   6. `weakly_referenced`：指对象是否被指向或者曾经指向一个`ARC`的弱变量，没有弱引用的对象可以更快释放
   7. `deallocating`：标志对象是否正在释放
   8. `has_sidetable_rc`：当对象引用计数大于`10`时，则需要借用该变量存储进位
-  9. `hextra_rc`：表示该对象的引用计数值，实际上引用计数值减`1`，例如，如果对象的引用计数为`10`，那么`extra_rc`为`9`，如果大于`10`，就需要用到上面的`has_sidetable_rc
+  9. `extra_rc`：表示该对象的引用计数值，实际上引用计数值减`1`，例如，如果对象的引用计数为`10`，那么`extra_rc`为`9`，如果大于`10`，就需要用到上面的`has_sidetable_rc
 
 #### 总结
 
 - `isa_t`分为`nonpointer`类型和非`nonpointer`。非`nonpointer`类型只是一个纯指针，`nonpointer`还包含了类的信息。什么是`nonpointer`和非`nonpointer`，参考[Non-pointer isa](<http://www.sealiesoftware.com/blog/archive/2013/09/24/objc_explain_Non-pointer_isa.html>)
 
 - `isa_t`是`联合体`+`位域`的方式存储信息的。采用这种方式的有点就是`节省大量内存`。通过位域的方式，可以在`isa`上面存储更多相关信息，内存得到充分的利用
+
+### Isa_t初始流程
+
+- 在[Runtime源码剖析-alloc](https://github.com/AngaoTu/AngaoTu-Blog/blob/main/OC%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/Runtime/1.%20Runtime%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-alloc/Runtime%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-alloc.md)我们讲到`alloc`主要干了三件事，最后一件事就是把**开辟的内存和类联系起来**，具体就是通过`initInstanceIsa`达到这个目的。下面我们就来看看具体这个方法做了什么操作。
+
+#### initInstanceIsa
+
+```objc
+inline void 
+objc_object::initInstanceIsa(Class cls, bool hasCxxDtor)
+{
+    ASSERT(!cls->instancesRequireRawIsa());
+    ASSERT(hasCxxDtor == cls->hasCxxDtor());
+
+    initIsa(cls, true, hasCxxDtor);
+}
+```
+
+- 该方法中调用了`initIsa`方法
+
+#### initIsa
+
+```objc
+inline void 
+objc_object::initIsa(Class cls, bool nonpointer, UNUSED_WITHOUT_INDEXED_ISA_AND_DTOR_BIT bool hasCxxDtor)
+{ 
+    ASSERT(!isTaggedPointer()); 
+    
+    isa_t newisa(0);
+
+    if (!nonpointer) {
+        newisa.setClass(cls, this);
+    } else {
+        ASSERT(!DisableNonpointerIsa);
+        ASSERT(!cls->instancesRequireRawIsa());
+
+
+#if SUPPORT_INDEXED_ISA
+        ASSERT(cls->classArrayIndex() > 0);
+        newisa.bits = ISA_INDEX_MAGIC_VALUE;
+        // isa.magic is part of ISA_MAGIC_VALUE
+        // isa.nonpointer is part of ISA_MAGIC_VALUE
+        newisa.has_cxx_dtor = hasCxxDtor;
+        newisa.indexcls = (uintptr_t)cls->classArrayIndex();
+#else
+        newisa.bits = ISA_MAGIC_VALUE;
+        // isa.magic is part of ISA_MAGIC_VALUE
+        // isa.nonpointer is part of ISA_MAGIC_VALUE
+#   if ISA_HAS_CXX_DTOR_BIT
+        newisa.has_cxx_dtor = hasCxxDtor;
+#   endif
+        newisa.setClass(cls, this);
+#endif
+        newisa.extra_rc = 1;
+    }
+
+    isa = newisa;
+}
+
+```
+
+- 在这个方法里面，首先判断是否是`nonpointer`，如不是的话，说明`isa_t`就是一个指针，直接把把类地址传给他。如果是的话，说明`isa_t`是一个联合体位域，里面不仅仅包含类地址，还有一些别的信息。
+
+- 接着我们遇到一个宏定义`SUPPORT_INDEXED_ISA`，简单来说就是`watch`手表使用的架构，则该宏定义为1，其他架构为0。具体该宏的定义可以查看此篇文章[SUPPORT_INDEXED_ISA](https://www.jianshu.com/p/46e50ed936c3)
+
+- 由于我们研究的目的是在iOS上应用，所以此处宏定义为0，我们走下面这块代码
+
+```objc
+newisa.bits = ISA_MAGIC_VALUE;
+// isa.magic is part of ISA_MAGIC_VALUE
+// isa.nonpointer is part of ISA_MAGIC_VALUE
+#   if ISA_HAS_CXX_DTOR_BIT
+newisa.has_cxx_dtor = hasCxxDtor;
+#   endif
+newisa.setClass(cls, this);
+#endif
+newisa.extra_rc = 1;
+```
+
+- 可以发现我们初始化就只有4步了，由于这里是在mac平台下的调试，所以这里以`__x86_64__`平台下`isa_t`位域来进行初始化，`arm64`初始化结构类似。
+
+##### newisa.bits
+
+- 我们来看看`ISA_MAGIC_VALUE`的定义
+
+```objective-c
+#define ISA_MAGIC_VALUE 0x001d800000000001ULL
+二进制表示：11101100000000000000000000000000000000000000000000001
+```
+
+- 我们转换成二进制数据，然后看一下哪些属性对应的位域被这行代码初始化了（标记为红色）
+
+![](http://ww2.sinaimg.cn/large/006y8mN6ly1g67o401xshj31cc0rkwgq.jpg)
+
+- 从图中了解到，在使用 `ISA_MAGIC_VALUE` 设置 `isa_t` 结构体之后，实际上只是设置了 `nonpointer` 以及 `magic` 这两部分的值。
+- `magic` 的值为 `0x3b` 用于调试器判断当前对象是真的对象还是没有初始化的空间
+
+##### newisa.has_cxx_dtor
+
+- `has_cxx_dtor`表示当前对象有 C++ 或者 ObjC 的析构器(`destructor`)，如果有析构器就会快速释放内存。
+
+![](http://ww2.sinaimg.cn/large/006y8mN6ly1g67oeaqxwqj31cc0rkq56.jpg)
+
+##### newisa.setClass
+
+- 这一步主要是把类的地址存下来
+
+```objective-c
+inline void
+isa_t::setClass(Class newCls, UNUSED_WITHOUT_PTRAUTH objc_object *obj)
+{
+    // Match the conditional in isa.h.
+#if __has_feature(ptrauth_calls) || TARGET_OS_SIMULATOR
+#   if ISA_SIGNING_SIGN_MODE == ISA_SIGNING_SIGN_NONE
+    // No signing, just use the raw pointer.
+    uintptr_t signedCls = (uintptr_t)newCls;
+
+#   elif ISA_SIGNING_SIGN_MODE == ISA_SIGNING_SIGN_ONLY_SWIFT
+    // We're only signing Swift classes. Non-Swift classes just use
+    // the raw pointer
+    uintptr_t signedCls = (uintptr_t)newCls;
+    if (newCls->isSwiftStable())
+        signedCls = (uintptr_t)ptrauth_sign_unauthenticated((void *)newCls, ISA_SIGNING_KEY, ptrauth_blend_discriminator(obj, ISA_SIGNING_DISCRIMINATOR));
+
+#   elif ISA_SIGNING_SIGN_MODE == ISA_SIGNING_SIGN_ALL
+    // We're signing everything
+    uintptr_t signedCls = (uintptr_t)ptrauth_sign_unauthenticated((void *)newCls, ISA_SIGNING_KEY, ptrauth_blend_discriminator(obj, ISA_SIGNING_DISCRIMINATOR));
+
+#   else
+#       error Unknown isa signing mode.
+#   endif
+
+    shiftcls_and_sig = signedCls >> 3;
+
+#elif SUPPORT_INDEXED_ISA
+    // Indexed isa only uses this method to set a raw pointer class.
+    // Setting an indexed class is handled separately.
+    cls = newCls;
+
+#else // Nonpointer isa, no ptrauth
+    shiftcls = (uintptr_t)newCls >> 3;
+#endif
+}
+```
+
+- 通过断点调试，可知最终走的是`shiftcls = (uintptr_t)newCls >> 3;`
+- 这里为什么需要把类的地址右移三位？
+  - `MACH_VM_MAX_ADDRESS`表示虚拟内存`最大寻址`空间，在`__arm64__`中`MACH_VM_MAX_ADDRESS` = `0x1000000000` 虚拟内存`最大寻址`空间是`36`位。在`__x86_64__`中`MACH_VM_MAX_ADDRESS` = `0x7fffffe00000` 虚拟内存`最大寻址`空间是`47`位。
+  - 字节对齐是`8字节`对齐，也就是说指针的地址只能是`8`的倍数，那么指针地址的`后3位`只能是`0`
+  - 为了节省内存空间，把`后3位`是`0`抹去
+- 地址填进去后，位域变化如下
+
+![](http://ww3.sinaimg.cn/large/006y8mN6ly1g67ok5dzvzj31cc0rk0uz.jpg)
+
+##### newisa.extra_rc
+
+- 表示该对象的引用计数为1

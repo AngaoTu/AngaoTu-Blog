@@ -322,7 +322,7 @@ objc_object::initInstanceIsa(Class cls, bool hasCxxDtor)
 }
 ```
 
-- 内部调用了`initIsa`方法，具体流程，我们会在`isa`这一章节讲解。
+- 内部调用了`initIsa`方法，具体流程，我们会在`isa`这一章节讲解。可参考[Runtime源码剖析-对象](https://github.com/AngaoTu/AngaoTu-Blog/blob/main/OC%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/Runtime/2.%20Runtime%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-%E5%AF%B9%E8%B1%A1/Runtime%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90-%E5%AF%B9%E8%B1%A1.md)初始化`isa`章节。
 
 ![](https://tva1.sinaimg.cn/large/e6c9d24egy1h56d9ooewmj22d00tyteb.jpg)
 
