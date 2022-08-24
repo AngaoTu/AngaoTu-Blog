@@ -384,6 +384,97 @@ const protocol_array_t protocols() const {
 }
 ```
 
+## class_rw_ext_t
+
+- 前面我们一直说`class_rw_t`结构中有一个`ro_or_rw_ext`变量，它可以是`class_rw_ext_t`类型指针。我们具体看一下它的结构
+
+```c++
+struct class_rw_ext_t {
+    DECLARE_AUTHED_PTR_TEMPLATE(class_ro_t)
+    // 指向class_ro_t的指针
+    class_ro_t_authed_ptr<const class_ro_t> ro;
+    // 方法列表
+    method_array_t methods;
+    // 属性列表
+    property_array_t properties;
+    // 协议列表
+    protocol_array_t protocols;
+    // 所属的类名
+    char *demangledName;
+    // 版本号
+    uint32_t version;
+};
+```
+
+- 可以看到该类中存储了方法、属性、协议列表，是可以动态扩展的列表。
+- 以及指向`class_ro_t`的指针
+
+## class_ro_t
+
+- 查看一下`class_ro_t`结构
+
+```c++
+struct class_ro_t {
+    uint32_t flags;
+    uint32_t instanceStart;
+    uint32_t instanceSize;
+#ifdef __LP64__
+    uint32_t reserved;
+#endif
+
+    union {
+        const uint8_t * ivarLayout;
+        Class nonMetaclass;
+    };
+	
+    // 类名
+    explicit_atomic<const char *> name;
+    // 实例方法列表
+    WrappedPtr<method_list_t, method_list_t::Ptrauth> baseMethods;
+    // 协议列表
+    protocol_list_t * baseProtocols;
+    // 成员变量列表
+    const ivar_list_t * ivars;
+
+    const uint8_t * weakIvarLayout;
+    // 属性列表
+    property_list_t *baseProperties;
+
+    // 省略方法
+};
+```
+
+- 它有基础方法列表、基础协议列表、成员变量列表、基础属性列表，这些内容都是编译器确定的。它是可读的，不可修改。
+- 至于分类所加载的数据、已经关联对象都存储在`class_rw_ext_t`中
+
+## 总结
+
+- 看完上面内容是不是有一下疑惑？
+  1. 为什么`ro_or_rw_ext` 会有两种类型，`class_rw_ext_t`或者`class_ro_t`类型?
+  2. 为什么`class_rw_ext_t`和`class_ro_t`都有方法、属性、协议列表，那为什么还需要两个结构存储？有什么区别
+
+- 下面我们一一解答一下上面问题
+
+### 1. 为什么`ro_or_rw_ext` 会有两种类型，`class_rw_ext_t`或者`class_ro_t`类型?
+
+1. 如果没有在运行时，对该类的方法、属性、协议等进行动态添加，则 `ro_or_rw_ext`是`class_ro_t`指针。`class_ro_t`是在编译期确定的。
+
+![](https://tva1.sinaimg.cn/large/e6c9d24egy1h5i4x9jpi4j21jg0u0jux.jpg)
+
+- `class_rw_t`中成员变量`ro_or_rw_ext`直接指向`class_ro_t`，省去`class_rw_ext_t`结构体的数据，减少内存消耗。
+
+2. 如果在运行时，动态的添加了方法、属性、协议等，`ro_or_rw_ext`是`class_rw_ext_t`指针。
+
+![](https://tva1.sinaimg.cn/large/e6c9d24egy1h5i53agzs3j22540kowhn.jpg)
+
+- `class_rw_t`中成员变量`ro_or_rw_ext`直接指向`class_rw_ext_t`，`class_rw_ext_t`的成员变量`ro`指向`class_ro_t`
+
+### 2. 数据区别？
+
+- `class_rw_ext_t`中存储列表使用是一个继承自`list_array_tt`的结构，可以理解为一个二维数组，数组中存的是列表。
+- `class_ro_t`中存储列表使用的是一个普通数组。
+- 为什么会存储结构不同？在运行时动态添加方法时，会直接在`list_array_tt`类型的二维数组中，把整个分类列表插入进去。
+
 ## 获取列表
 
 - `class_rw_t`最主要的作用就是存储了**方法、属性、协议列表**，以及提供了如何获取相关列表。
@@ -448,13 +539,110 @@ private:
   - `typename Element`：基础元数据类型（例如: `method_t`）
   - `typename List`：元数据的列表类型（例如: `method_list_t`）
 - 它内部的成员变量是一个联合体：
+  - 一个单独的列表
+  - 一个数组，数组中都是指针，每个指针分别指向一个列表 
+  - 可以理解为一维数组和二维数组的区别。
+- 除此之外，还有两个内部类
 
-### 属性列表
+#### array_t
+
+```c++
+struct array_t {
+    uint32_t count; // count 是 lists 数组中 List * 的数量
+    Ptr<List> lists[0]; // 指针数组，每个元素指向一个列表
+
+    static size_t byteSize(uint32_t count) {
+        return sizeof(array_t) + count*sizeof(lists[0]);
+    }
+    size_t byteSize() {
+        return byteSize(count);
+    }
+};
+```
+
+- 这里`array_t`是一个二维数据结构，里面含有基本的一些数据元素。
+
+#### iterator
+
+- 它是一个迭代器，用来遍历`array_t`结构中的二维数组
+
+### entsize_list_tt
+
+- 还是通过上面获取方法列表的例子
+
+```c++
+class method_array_t : 
+    public list_array_tt<method_t, method_list_t, method_list_t_authed_ptr>
+```
+
+- 我们发现第二个参数传的是`method_list_t`类型，进入它的结构
+
+```c++
+struct method_list_t : entsize_list_tt<method_t, method_list_t, 0xffff0003, method_t::pointer_modifier>
+```
+
+- 发现它继承于`entsize_list_tt`结构，我们看一下这个结构有何作用。
+
+```c++
+template <typename Element, typename List, uint32_t FlagMask, typename PointerModifier = PointerModifierNop>
+struct entsize_list_tt {
+    uint32_t entsizeAndFlags;
+    // entsize_list_tt 的容量
+    uint32_t count;
+
+	// 元素的大小（entry 的大小）
+    uint32_t entsize() const {
+        return entsizeAndFlags & ~FlagMask;
+    }
+    uint32_t flags() const {
+        return entsizeAndFlags & FlagMask;
+    }
+	
+    // 获取对应下标元素
+    Element& getOrEnd(uint32_t i) const { 
+        ASSERT(i <= count);
+        return *PointerModifier::modify(*this, (Element *)((uint8_t *)this + sizeof(*this) + i*entsize()));
+    }
+    Element& get(uint32_t i) const { 
+        ASSERT(i < count);
+        return getOrEnd(i);
+    }
+
+    size_t byteSize() const {
+        return byteSize(entsize(), count);
+    }
+    
+    static size_t byteSize(uint32_t entsize, uint32_t count) {
+        return sizeof(entsize_list_tt) + count*entsize;
+    }
+	
+    // 迭代器，用来遍历数组
+    struct iterator;
+    const iterator begin() const { 
+        return iterator(*static_cast<const List*>(this), 0); 
+    }
+    iterator begin() { 
+        return iterator(*static_cast<const List*>(this), 0); 
+    }
+    const iterator end() const { 
+        return iterator(*static_cast<const List*>(this), count); 
+    }
+    iterator end() { 
+        return iterator(*static_cast<const List*>(this), count); 
+    }
+    
+    struct iterator {...};
+}
+```
+
+- `entsize_list_tt`其实就是一个数组，用来存储编译完成后类的属性，提供了遍历和访问方法。
 
 
 
 ### 方法列表
 
 
+
+### 属性列表
 
 ### 协议列表
