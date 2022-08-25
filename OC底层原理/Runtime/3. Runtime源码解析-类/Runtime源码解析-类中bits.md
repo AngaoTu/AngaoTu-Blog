@@ -1,5 +1,29 @@
-[toc]
-
+- [Runtime源码解析-类中bits](#runtime源码解析-类中bits)
+  - [class_rw_t](#class_rw_t)
+    - [ro_or_rw_ext_t](#ro_or_rw_ext_t)
+      - [成员变量](#成员变量)
+      - [方法](#方法)
+        - [初始化方法](#初始化方法)
+        - [存取方法](#存取方法)
+        - [类型判断](#类型判断)
+    - [公有方法](#公有方法)
+      - [获取class_rw_ext_t](#获取class_rw_ext_t)
+      - [获取/设置class_ro_t](#获取设置class_ro_t)
+      - [方法、属性、协议列表](#方法属性协议列表)
+  - [class_rw_ext_t](#class_rw_ext_t)
+  - [class_ro_t](#class_ro_t)
+  - [总结](#总结)
+    - [1. 为什么`ro_or_rw_ext` 会有两种类型，`class_rw_ext_t`或者`class_ro_t`类型?](#1-为什么ro_or_rw_ext-会有两种类型class_rw_ext_t或者class_ro_t类型)
+    - [2. 数据区别？](#2-数据区别)
+  - [获取列表](#获取列表)
+    - [list_array_tt](#list_array_tt)
+      - [array_t](#array_t)
+      - [iterator](#iterator)
+    - [entsize_list_tt](#entsize_list_tt)
+    - [方法列表](#方法列表)
+    - [属性列表](#属性列表)
+    - [协议列表](#协议列表)
+  - [总结](#总结-1)
 # Runtime源码解析-类中bits
 
 - 首先我们再看一眼`objc_class`类的定义，本篇文章研究`bits`到底存储了哪些信息
@@ -641,8 +665,120 @@ struct entsize_list_tt {
 
 ### 方法列表
 
+- 用来存储该类的方法的数据结构，继承`list_array_tt`。
 
+```c++
+class method_array_t : 
+    public list_array_tt<method_t, method_list_t, method_list_t_authed_ptr>
+{
+    typedef list_array_tt<method_t, method_list_t, method_list_t_authed_ptr> Super;
+
+ public:
+    method_array_t() : Super() { }
+    method_array_t(method_list_t *l) : Super(l) { }
+
+    const method_list_t_authed_ptr<method_list_t> *beginCategoryMethodLists() const {
+        return beginLists();
+    }
+    
+    const method_list_t_authed_ptr<method_list_t> *endCategoryMethodLists(Class cls) const;
+};
+```
+
+- 前面已经说过`list_array_tt`结构，可能是一维数组或者二维数组，所以`method_array_t`也是按照如下结构存储。
+- 我们看一下单个方法的存储结构`method_t`
+
+```c++
+struct method_t {
+    static const uint32_t smallMethodListFlag = 0x80000000;
+
+    method_t(const method_t &other) = delete;
+
+    // The representation of a "big" method. This is the traditional
+    // representation of three pointers storing the selector, types
+    // and implementation.
+    struct big {
+        SEL name;
+        const char *types;
+        MethodListIMP imp;
+    };
+
+	// 省略方法
+}
+```
+
+- 我们发现它内部定义了一个`big`结构体，里面包含了方法的`SEL`和`imp`
+- 我们就可以通过`method_t`结构拿到`big`，就可以获取到里面的方法。
 
 ### 属性列表
 
+- 用来存储该类的属性的数据结构，和上面类似。同样继承`list_array_tt`
+
+```c++
+class property_array_t : 
+    public list_array_tt<property_t, property_list_t, RawPtr>
+{
+    typedef list_array_tt<property_t, property_list_t, RawPtr> Super;
+
+ public:
+    property_array_t() : Super() { }
+    property_array_t(property_list_t *l) : Super(l) { }
+};
+```
+
+- 我们查看一下单个属性结构`property_t`
+
+```c++
+struct property_t {
+    const char *name;
+    const char *attributes;
+};
+```
+
+- 内部非常简单，一个代表变量名，一个代表变量的修饰符(strong、weak等)。
+
 ### 协议列表
+
+- 用来存储该类的协议的数据结构，和上面类似。同样继承`list_array_tt`
+
+```c++
+class protocol_array_t : 
+    public list_array_tt<protocol_ref_t, protocol_list_t, RawPtr>
+{
+    typedef list_array_tt<protocol_ref_t, protocol_list_t, RawPtr> Super;
+
+ public:
+    protocol_array_t() : Super() { }
+    protocol_array_t(protocol_list_t *l) : Super(l) { }
+};
+```
+
+- 我们查看一下单个协议结构`protocol_ref_t`
+
+```c++
+typedef uintptr_t protocol_ref_t;
+```
+
+- 它就是一个指针，指向对应的协议。
+
+## 总结
+
+- `bits`中存储了属性、方法、协议、成员变量。成员变量只存储在`class_ro_t`中，它是编译器就决定好的，不可修改。
+
+- `bits`中这些信息，是通过`class_rw_t`结构存储，它有一个`ro_or_rw_ext_t`变量，它可以是`ro`类型，也可能是`rw_ext`类型。
+
+  - 如果该类没有动态添加属性、方法、协议等，就是`ro`类型
+  - 否则就是`rw_ext`类型，然后它内部会包含`ro`。
+  - 之所以会出现两种结构，都是为了优化内存。
+
+- `ro`是干净内存，类的加载时类本身的数据存放在`ro`中，编译期决定。
+
+  - 它存储的方法、属性、协议等列表，是一个一维数组
+
+- `rwe`是脏内存，运行时动态创建成员或分类中的成员都在`rwe`。
+
+  - 它存储的方法、属性、协议等列表，是一个二维数据。动态添加的是个数组，编译期决定的是一个数组，方便动态添加对应信息。
+
+  
+
+  
