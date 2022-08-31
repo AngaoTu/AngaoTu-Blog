@@ -199,8 +199,8 @@ else {
 2. 得到当前总的开辟空间。
 
 3. 如果是首次进入，需要开辟空间
-4. 如果存储数量即将存满，需要扩容
-5. 其他情况，则说明存储空间足够，接下来进行存储即可。
+4. 如果存储量小于3/4，则说明存储空间足够，接下来进行存储即可。
+5. 如果存储数量即将存满，需要扩容
 
 #### 首次进入，开辟内存
 
@@ -239,6 +239,134 @@ void cache_t::reallocate(mask_t oldCapacity, mask_t newCapacity, bool freeOld)
 }
 ```
 
+- 主要做了三件事：
+  1. `allocateBuckets`开辟内存
+  2. `setBucketsAndMask`设置`buckets`和`mask`
+  3. `collect_free`是否释放旧的内存
 
+##### allocateBuckets
+
+```c++
+bucket_t *cache_t::allocateBuckets(mask_t newCapacity)
+{
+    // Allocate one extra bucket to mark the end of the list.
+    // This can't overflow mask_t because newCapacity is a power of 2.
+    // 开辟对应内存
+    bucket_t *newBuckets = (bucket_t *)calloc(bytesForCapacity(newCapacity), 1);
+
+    // 在当前空间最后一位存入值
+    bucket_t *end = endMarker(newBuckets, newCapacity);
+#if __arm__
+    // End marker's sel is 1 and imp points BEFORE the first bucket.
+    // This saves an instruction in objc_msgSend.
+    end->set<NotAtomic, Raw>(newBuckets, (SEL)(uintptr_t)1, (IMP)(newBuckets - 1), nil);
+#else
+    // End marker's sel is 1 and imp points to the first bucket.
+    end->set<NotAtomic, Raw>(newBuckets, (SEL)(uintptr_t)1, (IMP)newBuckets, nil);
+#endif
+    
+    if (PrintCaches) recordNewCache(newCapacity);
+
+    return newBuckets;
+}
+```
+
+- 该方法主要做了两件事：
+  1. 通过`calloc`方法，开辟`sizeof(bucket_t) * cap`大小空间
+  2. 找到当前开辟空间最后一个值，然后通过`end->set`方法，把`sel=1`，`imp=第一个桶之前的地址`存储到最后一个位置。
+
+- 返回新创建内存空间的首地址。
+
+##### setBucketsAndMask
+
+```c++
+void cache_t::setBucketsAndMask(struct bucket_t *newBuckets, mask_t newMask)
+{
+    // objc_msgSend uses mask and buckets with no locks.
+    // It is safe for objc_msgSend to see new buckets but old mask.
+    // (It will get a cache miss but not overrun the buckets' bounds).
+    // It is unsafe for objc_msgSend to see old buckets and new mask.
+    // Therefore we write new buckets, wait a lot, then write new mask.
+    // objc_msgSend reads mask first, then buckets.
+
+#ifdef __arm__
+    // ensure other threads see buckets contents before buckets pointer
+    mega_barrier();
+
+    _bucketsAndMaybeMask.store((uintptr_t)newBuckets, memory_order_relaxed);
+
+    // ensure other threads see new buckets before new mask
+    mega_barrier();
+
+    _maybeMask.store(newMask, memory_order_relaxed);
+    _occupied = 0;
+#elif __x86_64__ || i386
+    // ensure other threads see buckets contents before buckets pointer
+    _bucketsAndMaybeMask.store((uintptr_t)newBuckets, memory_order_release);
+
+    // ensure other threads see new buckets before new mask
+    _maybeMask.store(newMask, memory_order_release);
+    _occupied = 0;
+#else
+#error Don't know how to do setBucketsAndMask on this architecture.
+#endif
+}
+```
+
+- `iOS`采用`arm`架构，向`_bucketsAndMaybeMask`和`_maybeMask`写入新开辟内存首地址，以及新开辟`newMask`值
+
+##### collect_free
+
+```c++
+void cache_t::collect_free(bucket_t *data, mask_t capacity)
+{
+#if CONFIG_USE_CACHE_LOCK
+    cacheUpdateLock.assertLocked();
+#else
+    runtimeLock.assertLocked();
+#endif
+
+    if (PrintCaches) recordDeadCache(capacity);
+
+    _garbage_make_room (); // 创建垃圾回收站
+    garbage_byte_size += cache_t::bytesForCapacity(capacity); // 获取开启内存大小
+    garbage_refs[garbage_count++] = data; // 把需要清除地址，写进回收站中
+    cache_t::collectNolock(false); // 清空数据
+}
+```
+
+- 主要作用是清空数据，回收内存。
+
+#### 容量小于3/4
+
+```c++
+else if (fastpath(newOccupied + CACHE_END_MARKER <= cache_fill_ratio(capacity))) {
+    // Cache is less than 3/4 or 7/8 full. Use it as-is.
+}
+
+static inline mask_t cache_fill_ratio(mask_t capacity) {
+    return capacity * 3 / 4;
+}
+```
+
+- 如果需要缓存的方法所占总容量`3/4`以下，就不做任何操作，直接存储。
+
+#### 即将存满，进行扩容
+
+```c++
+else {
+    capacity = capacity ? capacity * 2 : INIT_CACHE_SIZE;
+    if (capacity > MAX_CACHE_SIZE) {
+        capacity = MAX_CACHE_SIZE;
+    }
+    reallocate(oldCapacity, capacity, true);
+}
+
+MAX_CACHE_SIZE_LOG2  = 16,
+MAX_CACHE_SIZE       = (1 << MAX_CACHE_SIZE_LOG2),
+```
+
+- 如果加上当前方法，所存储的容量超过`3/4`，就进行两倍扩容。最大不容量不超过`1<<16`的大小
+- 通过`reallocate`分配新的内存。
 
 ### 存储方法
