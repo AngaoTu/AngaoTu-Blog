@@ -1,5 +1,18 @@
-[toc]
-
+- [Runtime源码解析-类中cache](#runtime源码解析-类中cache)
+  - [cache_t](#cache_t)
+  - [bucket_t](#bucket_t)
+  - [insert方法](#insert方法)
+    - [开辟内存](#开辟内存)
+      - [首次进入，开辟内存](#首次进入开辟内存)
+        - [allocateBuckets](#allocatebuckets)
+        - [setBucketsAndMask](#setbucketsandmask)
+        - [collect_free](#collect_free)
+      - [容量小于3/4](#容量小于34)
+      - [即将存满，进行扩容](#即将存满进行扩容)
+    - [存储方法](#存储方法)
+      - [cache_hash和cache_next](#cache_hash和cache_next)
+      - [存储方法](#存储方法-1)
+    - [总结](#总结)
 # Runtime源码解析-类中cache
 
 - 首先我们再看一眼`objc_class`类的定义，本篇文章主要研究`cache`。
@@ -370,3 +383,142 @@ MAX_CACHE_SIZE       = (1 << MAX_CACHE_SIZE_LOG2),
 - 通过`reallocate`分配新的内存。
 
 ### 存储方法
+
+- 当容量足以存放该缓存，则进入存储方法阶段
+
+```c++
+// 拿到指向第一个bucket的首地址
+bucket_t *b = buckets();
+mask_t m = capacity - 1;
+
+// 通过hash求出适当的存储位置
+mask_t begin = cache_hash(sel, m);
+mask_t i = begin;
+
+// Scan for the first unused slot and insert there.
+// There is guaranteed to be an empty slot.
+do {
+    if (fastpath(b[i].sel() == 0)) {
+        incrementOccupied();
+        b[i].set<Atomic, Encoded>(b, sel, imp, cls());
+        return;
+    }
+    if (b[i].sel() == sel) {
+        // The entry was added to the cache by some other thread
+        // before we grabbed the cacheUpdateLock.
+        return;
+    }
+} while (fastpath((i = cache_next(i, m)) != begin)); // 如果当前位置不合适，产生hash冲突，接着寻找下一个位置
+
+bad_cache(receiver, (SEL)sel);
+```
+
+- 存储方法时，主要分为以下几个部分：
+  1. 获取到存储方法缓存的首地址，也就是通过`buckets()`
+  2. 然后计算出合适的存储位置，存储方法
+  3. 未找到合适位置，则说明该缓存区域有问题。调用`bad_cache`方法
+
+#### cache_hash和cache_next
+
+- 我们看一下它是如何计算存储位置
+
+```c++
+static inline mask_t cache_hash(SEL sel, mask_t mask) 
+{
+    uintptr_t value = (uintptr_t)sel;
+#if CONFIG_USE_PREOPT_CACHES
+    value ^= value >> 7;
+#endif
+    return (mask_t)(value & mask);
+}
+```
+
+- 通过`sel`与`mask`进行与操作，算出对应位置，接着我们需要去判断该位置是否可用。
+
+```c++
+do {
+    if (fastpath(b[i].sel() == 0)) { // 如果该位置为空，则存储
+        incrementOccupied();
+        b[i].set<Atomic, Encoded>(b, sel, imp, cls());
+        return;
+    }
+    if (b[i].sel() == sel) { // 如果该位置不为空，则继续循环
+        return;
+    }
+} while (fastpath((i = cache_next(i, m)) != begin));
+```
+
+- 如果当前位置是空的，则直接存储，否则通过`cache_next`方法去寻找下一个位置，解决哈希冲突
+
+```c++
+static inline mask_t cache_next(mask_t i, mask_t mask) {
+    return i ? i-1 : mask;
+}
+```
+
+- 该方法中向前寻找合适的位置。
+
+#### 存储方法
+
+- 找到合适的位置了，可以把该方法写入缓存中。
+
+```c++
+if (fastpath(b[i].sel() == 0)) {
+    incrementOccupied();
+    b[i].set<Atomic, Encoded>(b, sel, imp, cls());
+    return;
+}
+```
+
+- 第一步需要把占用空间+1，该变量记录了当前有多少缓存的方法
+
+```c++
+void cache_t::incrementOccupied() 
+{
+    _occupied++;
+}
+```
+
+- 接着把方法写入缓存中
+
+```c++
+template<Atomicity atomicity, IMPEncoding impEncoding>
+void bucket_t::set(bucket_t *base, SEL newSel, IMP newImp, Class cls)
+{
+    ASSERT(_sel.load(memory_order_relaxed) == 0 ||
+           _sel.load(memory_order_relaxed) == newSel);
+
+    // 对imp进行编码
+    uintptr_t newIMP = (impEncoding == Encoded
+                        ? encodeImp(base, newImp, newSel, cls)
+                        : (uintptr_t)newImp);
+
+    if (atomicity == Atomic) {
+        // 把编码后imp存储到bucket中_imp中。
+        _imp.store(newIMP, memory_order_relaxed);
+        
+        // 再把sel存储到bucket中_sel中。
+        if (_sel.load(memory_order_relaxed) != newSel) {
+#ifdef __arm__
+            mega_barrier();
+            _sel.store(newSel, memory_order_relaxed);
+#elif __x86_64__ || __i386__
+            _sel.store(newSel, memory_order_release);
+#else
+#error Don't know how to do bucket_t::set on this architecture.
+#endif
+        }
+    } else {
+        _imp.store(newIMP, memory_order_relaxed);
+        _sel.store(newSel, memory_order_relaxed);
+    }
+}
+```
+
+- 先对`imp`进行编码，然后把编码后的`imp`和`sel`，存储到`bucket`中
+
+### 总结
+
+- 方法缓存是存储在一块连续空间中，通过哈希的方式存储。
+- 首次开辟连续内存为4，如果当前容量已经占用`3/4`，则按照原来的2倍进行扩容。扩容时，会丢弃原来缓存方法，只存储最新一次的方法。
+- 空间够用的情况下，通过`cache_hash`方法计算合适的下标，如果该位置冲突了，则通过`cache_next`方法继续循环找到合适位置
