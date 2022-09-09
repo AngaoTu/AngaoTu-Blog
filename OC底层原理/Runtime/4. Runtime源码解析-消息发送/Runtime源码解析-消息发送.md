@@ -1,4 +1,27 @@
-[toc]
+- [Runtime源码解析-消息发送](#runtime源码解析-消息发送)
+  - [前言](#前言)
+  - [objc_msgSend](#objc_msgsend)
+    - [CacheLookup 缓存查找](#cachelookup-缓存查找)
+      - [1. 获取cache_t](#1-获取cache_t)
+      - [2. 获取buckets](#2-获取buckets)
+      - [3. 计算_cmd哈希值](#3-计算_cmd哈希值)
+      - [4. 遍历查询](#4-遍历查询)
+    - [__objc_msgSend_uncached](#__objc_msgsend_uncached)
+      - [lookUpImpOrForward](#lookupimporforward)
+        - [1. 判断类是否加载到内存中](#1-判断类是否加载到内存中)
+        - [2. 初始化对应类和元类](#2-初始化对应类和元类)
+        - [3. 查询方法](#3-查询方法)
+          - [getMethodNoSuper_nolock](#getmethodnosuper_nolock)
+        - [4. 方法未找到](#4-方法未找到)
+        - [5. 方法找到](#5-方法找到)
+  - [resolveMethod_locked](#resolvemethod_locked)
+    - [对象方法动态决议](#对象方法动态决议)
+    - [类方法动态决议](#类方法动态决议)
+  - [消息转发](#消息转发)
+    - [快速转发](#快速转发)
+    - [慢速转发](#慢速转发)
+    - [总结](#总结)
+  - [总结](#总结-1)
 
 # Runtime源码解析-消息发送
 
@@ -740,6 +763,7 @@ resolveMethod_locked(id inst, SEL sel, Class cls, int behavior)
         // try [nonMetaClass resolveClassMethod:sel]
         // and [cls resolveInstanceMethod:sel]
         resolveClassMethod(inst, sel, cls);
+        // 如果没有找到，在元类的对象方法中查找，类方法相当于元类中的对象方法
         if (!lookUpImpOrNilTryCache(inst, sel, cls)) {
             resolveInstanceMethod(inst, sel, cls);
         }
@@ -747,6 +771,7 @@ resolveMethod_locked(id inst, SEL sel, Class cls, int behavior)
 
     // chances are that calling the resolver have populated the cache
     // so attempt using it
+    // 返回前面通过resolveInstanceMethod或resolveClassMethod添加的sel对应方法
     return lookUpImpOrForwardTryCache(inst, sel, cls, behavior);
 }
 ```
@@ -755,6 +780,199 @@ resolveMethod_locked(id inst, SEL sel, Class cls, int behavior)
 
 ### 对象方法动态决议
 
+- 如果是对象方法，调用`resolveInstanceMethod`方法
 
+```c++
+static void resolveInstanceMethod(id inst, SEL sel, Class cls)
+{
+    runtimeLock.assertUnlocked();
+    ASSERT(cls->isRealized());
+    SEL resolve_sel = @selector(resolveInstanceMethod:);
+
+    if (!lookUpImpOrNilTryCache(cls, resolve_sel, cls->ISA(/*authenticated*/true))) {
+        // Resolver not implemented.
+        return;
+    }
+	// 调用resolveInstanceMethod方法
+    // 通过 objc_msgSend 发送消息 接收者是cls
+    BOOL (*msg)(Class, SEL, SEL) = (typeof(msg))objc_msgSend;
+    bool resolved = msg(cls, resolve_sel, sel);
+
+    // Cache the result (good or bad) so the resolver doesn't fire next time.
+    // +resolveInstanceMethod adds to self a.k.a. cls
+    // 去查找sel对应的实现
+    IMP imp = lookUpImpOrNilTryCache(inst, sel, cls);
+
+    if (resolved  &&  PrintResolving) {
+        if (imp) {
+            _objc_inform("RESOLVE: method %c[%s %s] "
+                         "dynamically resolved to %p", 
+                         cls->isMetaClass() ? '+' : '-', 
+                         cls->nameForLogging(), sel_getName(sel), imp);
+        }
+        else {
+            // Method resolver didn't add anything?
+            _objc_inform("RESOLVE: +[%s resolveInstanceMethod:%s] returned YES"
+                         ", but no new implementation of %c[%s %s] was found",
+                         cls->nameForLogging(), sel_getName(sel), 
+                         cls->isMetaClass() ? '+' : '-', 
+                         cls->nameForLogging(), sel_getName(sel));
+        }
+    }
+}
+```
+
+- 首先创建一个方法名为`resolveInstanceMethod` 的`SEL resolve_sel`。
+- 直接调用`objc_msgSend`给类发送消息，从这里可以看出`resolveInstanceMethod`是类方法
+- 然后通过`lookUpImpOrNilTryCache`去缓存和方法列表中去查看，是否实现了`resolveInstanceMethod`该方法。
+
+```c++
+IMP lookUpImpOrNilTryCache(id inst, SEL sel, Class cls, int behavior)
+{
+    return _lookUpImpTryCache(inst, sel, cls, behavior | LOOKUP_NIL);
+}
+
+static IMP _lookUpImpTryCache(id inst, SEL sel, Class cls, int behavior)
+{
+    runtimeLock.assertUnlocked();
+
+    if (slowpath(!cls->isInitialized())) {
+        // see comment in lookUpImpOrForward
+        return lookUpImpOrForward(inst, sel, cls, behavior);
+    }
+	// 在缓存中查找sel对应imp
+    IMP imp = cache_getImp(cls, sel);
+    if (imp != NULL) goto done;
+#if CONFIG_USE_PREOPT_CACHES
+    if (fastpath(cls->cache.isConstantOptimizedCache(/* strict */true))) {
+        imp = cache_getImp(cls->cache.preoptFallbackClass(), sel);
+    }
+#endif
+    // 缓存没有查询到imp，进入方法列表中查询
+    if (slowpath(imp == NULL)) {
+        return lookUpImpOrForward(inst, sel, cls, behavior);
+    }
+
+done:
+    if ((behavior & LOOKUP_NIL) && imp == (IMP)_objc_msgForward_impcache) {
+        return nil;
+    }
+    return imp;
+}
+```
+
+1. 先在缓存中查找，如果`imp`存在则直接跳转`done`流程
+2. 没有查找到`imp`，进入方法列表进行查询。注意，此次再进入方法列表查询，`behavior`= `4` ，`4` & `2 `= `0`，不会再次进入动态方法决议
+3. `done`流程，如果 `imp` = `_objc_msgForward_impcache`，说明缓存中的是`forward_imp`，就直接返回`nil`，否者返回的`imp`
 
 ### 类方法动态决议
+
+- 如果是类方法，则调用`resolveClassMethod`
+
+```c++
+static void resolveClassMethod(id inst, SEL sel, Class cls)
+{
+    runtimeLock.assertUnlocked();
+    ASSERT(cls->isRealized());
+    ASSERT(cls->isMetaClass());
+
+    if (!lookUpImpOrNilTryCache(inst, @selector(resolveClassMethod:), cls)) {
+        // Resolver not implemented.
+        return;
+    }
+	// 获取元类
+    Class nonmeta;
+    {
+        mutex_locker_t lock(runtimeLock);
+        nonmeta = getMaybeUnrealizedNonMetaClass(cls, inst);
+        // +initialize path should have realized nonmeta already
+        if (!nonmeta->isRealized()) {
+            _objc_fatal("nonmeta class %s (%p) unexpectedly not realized",
+                        nonmeta->nameForLogging(), nonmeta);
+        }
+    }
+    BOOL (*msg)(Class, SEL, SEL) = (typeof(msg))objc_msgSend;
+    // 向元类发送消息
+    bool resolved = msg(nonmeta, @selector(resolveClassMethod:), sel);
+
+    // Cache the result (good or bad) so the resolver doesn't fire next time.
+    // +resolveClassMethod adds to self->ISA() a.k.a. cls
+    // 去元类中查找
+    IMP imp = lookUpImpOrNilTryCache(inst, sel, cls);
+
+    if (resolved  &&  PrintResolving) {
+        if (imp) {
+            _objc_inform("RESOLVE: method %c[%s %s] "
+                         "dynamically resolved to %p", 
+                         cls->isMetaClass() ? '+' : '-', 
+                         cls->nameForLogging(), sel_getName(sel), imp);
+        }
+        else {
+            // Method resolver didn't add anything?
+            _objc_inform("RESOLVE: +[%s resolveClassMethod:%s] returned YES"
+                         ", but no new implementation of %c[%s %s] was found",
+                         cls->nameForLogging(), sel_getName(sel), 
+                         cls->isMetaClass() ? '+' : '-', 
+                         cls->nameForLogging(), sel_getName(sel));
+        }
+    }
+}
+```
+
+- 该流程与`resolveInstanceMethod`方法类似。
+- 直接调用`objc_msgSend`给元类发送消息，可能`resolveClassMethod`实现了`sel`对应的`imp`
+- 然后通过`lookUpImpOrNilTryCache`去缓存和方法列表中去查看，是否实现了`resolveClassMethod`该方法。
+
+## 消息转发
+
+- 如果没有实现动态决议，这个时候消息会进入转发流程。分为**快速转发**和**慢速转发**
+
+### 快速转发
+
+- 快速转发是通过`forwardingTargetForSelector`实现，简单理解指定一个对象，让这个对象去接收消息。
+- 首先定义一个`TestMain`类和`Test`类，然后在`main`函数中调用`test`方法。`TestMain`没有实现`test`方法，`Test`类实现`test`方法，`TestMain`类和`Test`类可以不是继承关系
+
+```objective-c
+- (id)forwardingTargetForSelector:(SEL)aSelector{
+	if (aSelector == @selector(test)) {
+        return [[Test alloc] init];
+    }
+    return nil;
+}
+```
+
+- 这样就可以让你所指定的类去实现这个方法，如果没有重写该方法，说明没有指定的类可以去实现该方法，则快速转发也不行了。就进入到慢速转发流程
+
+### 慢速转发
+
+- 慢速转发是通过`methodSignatureForSelector`和`forwardInvocation`配合实现的。
+
+```objective-c
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector{
+    if (aSelector == @selector(test)) {
+        return [NSMethodSignature signatureWithObjCTypes:"v@:@"];
+    }
+    return [super methodSignatureForSelector:aSelector];
+}
+
+- (void)forwardInvocation:(NSInvocation *)anInvocation{
+    [anInvocation invokeWithTarget:[[Test alloc] init]];
+}
+```
+
+- 如果`methodSignatureForSelector`返回`nil`，慢速转发时，程序会直接崩溃。
+
+### 总结
+
+- 快速转发：通过`forwardingTargetForSelector`实现，如果此时有指定的对象去接收这个消息，就会走之指定对象的查找流程，如果返回是`nil`，进入慢速转发流程
+
+- 慢速转发：通过`methodSignatureForSelector`和`forwardInvocation`共同实现，如果`methodSignatureForSelector`返回值是`nil`，慢速查找流程结束，如果有返回值`forwardInvocation`的事务处理不处理都不会崩溃。
+
+## 总结
+
+- 消息发送流程总结，总共经历了三个阶段：
+
+1. 消息发送阶段：负责从类及父类的缓存列表及方法列表查找方法。
+2. 动态解析阶段：如果消息发送阶段没有找到方法，则会进入动态解析阶段，负责动态的添加方法实现。
+3. 消息转发阶段：如果也没有实现动态解析方法，则会进行消息转发阶段，将消息转发给可以处理消息的接受者来处理。
+
