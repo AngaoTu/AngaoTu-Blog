@@ -359,9 +359,9 @@ void registerObjCNotifiers(_dyld_objc_notify_mapped mapped, _dyld_objc_notify_in
 - 在`registerObjCNotifiers`方法中，先调用`map_images`后调用`load_images`方法。
 - 下面我们先看看`map_images`方法，它把给定的镜像文件，映射到内存中。
 
-## 镜像文件的映射
+## map_images
 
-- 我们通过研究`map_images`方法，来查看具体是如何进行类加载
+- 我们通过研究`map_images`方法，来查看具体是如何进行镜像文件的映射
 
 ```C++
 void
@@ -954,3 +954,207 @@ if (resolvedFutureClasses) {
 ```
 
 - 处理被删除，或者移动后的类（未来类）
+
+## load_images
+
+- 在上一个节，我们通过分析`map_images`大概了解，如何把镜像文件映射到内存中。
+- 接着我们查看`load_images`它做了什么
+
+```c++
+void
+load_images(const char *path __unused, const struct mach_header *mh)
+{
+    if (!didInitialAttachCategories && didCallDyldNotifyRegister) {
+        didInitialAttachCategories = true;
+        // 加载所有的分类
+        loadAllCategories();
+    }
+
+    // Return without taking locks if there are no +load methods here.
+    if (!hasLoadMethods((const headerType *)mh)) return;
+
+    recursive_mutex_locker_t lock(loadMethodLock);
+
+    // Discover load methods
+    {
+        mutex_locker_t lock2(runtimeLock);
+        // 准备load方法
+        prepare_load_methods((const headerType *)mh);
+    }
+
+    // Call +load methods (without runtimeLock - re-entrant)
+    // 调用load方法
+    call_load_methods();
+}
+```
+
+- `loadAllCategories()` 加载所有的`Category`
+- `prepare_load_methods((const headerType *)mh)` 准备`load`方法
+- `call_load_methods()` 调用`load`方法
+
+### loadAllCategories
+
+```c++
+static void loadAllCategories() {
+    mutex_locker_t lock(runtimeLock);
+
+    for (auto *hi = FirstHeader; hi != NULL; hi = hi->getNext()) {
+        load_categories_nolock(hi);
+    }
+}
+```
+
+- 循环遍历，调用所有的分类
+
+### prepare_load_methods
+
+```c++
+void prepare_load_methods(const headerType *mhdr)
+{
+    size_t count, i;
+
+    runtimeLock.assertLocked();
+	
+    // 获取所有懒加载的类
+    classref_t const *classlist = 
+        _getObjc2NonlazyClassList(mhdr, &count);
+    for (i = 0; i < count; i++) {
+        // 调用当前类的load方法
+        schedule_class_load(remapClass(classlist[i]));
+    }
+	
+    // 获取对应的分类
+    category_t * const *categorylist = _getObjc2NonlazyCategoryList(mhdr, &count);
+    for (i = 0; i < count; i++) {
+        category_t *cat = categorylist[i];
+        Class cls = remapClass(cat->cls);
+        if (!cls) continue;  // category for ignored weak-linked class
+        if (cls->isSwiftStable()) {
+            _objc_fatal("Swift class extensions and categories on Swift "
+                        "classes are not allowed to have +load methods");
+        }
+        // 实现当前类
+        realizeClassWithoutSwift(cls, nil);
+        ASSERT(cls->ISA()->isRealized());
+        // 添加当前的load方法
+        add_category_to_loadable_list(cat);
+    }
+}
+```
+
+### call_load_methods
+
+```c++
+void call_load_methods(void)
+{
+    static bool loading = NO;
+    bool more_categories;
+
+    loadMethodLock.assertLocked();
+
+    // Re-entrant calls do nothing; the outermost call will finish the job.
+    if (loading) return;
+    loading = YES;
+
+    void *pool = objc_autoreleasePoolPush();
+
+    do {
+        // 1. Repeatedly call class +loads until there aren't any more
+        // 递归调用load方法
+        while (loadable_classes_used > 0) {
+            call_class_loads();
+        }
+
+        // 2. Call category +loads ONCE
+        // 调用分类的load方法
+        more_categories = call_category_loads();
+
+        // 3. Run more +loads if there are classes OR more untried categories
+    } while (loadable_classes_used > 0  ||  more_categories);
+
+    objc_autoreleasePoolPop(pool);
+
+    loading = NO;
+}
+```
+
+- 通过`call_class_loads`调用所有主类的`load`方法
+
+```c++
+static void call_class_loads(void)
+{
+    int i;
+    
+    // Detach current loadable list.
+    struct loadable_class *classes = loadable_classes;
+    int used = loadable_classes_used;
+    loadable_classes = nil;
+    loadable_classes_allocated = 0;
+    loadable_classes_used = 0;
+    
+    // Call all +loads for the detached list.
+    for (i = 0; i < used; i++) {
+        Class cls = classes[i].cls;
+        // 取出对应的load方法
+        load_method_t load_method = (load_method_t)classes[i].method;
+        if (!cls) continue; 
+
+        if (PrintLoading) {
+            _objc_inform("LOAD: +[%s load]\n", cls->nameForLogging());
+        }
+        // 调用load方法
+        (*load_method)(cls, @selector(load));
+    }
+    
+    // Destroy the detached list.
+    if (classes) free(classes);
+}
+```
+
+- 通过`call_category_loads`调用分类的`load`方法
+
+```c++
+static bool call_category_loads(void)
+{
+    int i, shift;
+    bool new_categories_added = NO;
+    
+    // Detach current loadable list.
+    struct loadable_category *cats = loadable_categories;
+    int used = loadable_categories_used;
+    int allocated = loadable_categories_allocated;
+    loadable_categories = nil;
+    loadable_categories_allocated = 0;
+    loadable_categories_used = 0;
+
+    // Call all +loads for the detached list.
+    for (i = 0; i < used; i++) {
+        Category cat = cats[i].cat;
+        load_method_t load_method = (load_method_t)cats[i].method;
+        Class cls;
+        if (!cat) continue;
+
+        cls = _category_getClass(cat);
+        if (cls  &&  cls->isLoadable()) {
+            if (PrintLoading) {
+                _objc_inform("LOAD: +[%s(%s) load]\n", 
+                             cls->nameForLogging(), 
+                             _category_getName(cat));
+            }
+            // 调用load方法
+            (*load_method)(cls, @selector(load));
+            cats[i].cat = nil;
+        }
+    }
+
+    // 省略部分方法
+    
+    return new_categories_added;
+}
+
+```
+
+- 通过上面代码，可以得出以下结论：类和分类都会调用`load`方法
+  - 类的`load`比分类的`load`方法先调用，类中`load`方法调用完才开始调用分类的`load`方法
+  - 类中的`load`方法按编译先后顺序，谁先编译谁的`load`方法先调用
+  - 分类中的的`load`方法按编译先后顺序，谁先编译谁的`load`方法先调用
