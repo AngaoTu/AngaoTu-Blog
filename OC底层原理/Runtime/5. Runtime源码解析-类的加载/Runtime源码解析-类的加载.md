@@ -379,7 +379,7 @@ static void methodizeClass(Class cls, Class previously)
 }
 ```
 
-- 在该方法中，主要是针对`rwe`的初始化，方法列表的准备工作，分类的附着（放在分类的加载中讲解）
+- 在该方法中，主要是针对`rwe`的初始化，方法列表的准备工作，分类的附着（放在分类的加载中讲解）[Runtime源码解析-分类的加载](https://github.com/AngaoTu/AngaoTu-Blog/blob/main/OC%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/Runtime/5.%20Runtime%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-%E7%B1%BB%E7%9A%84%E5%8A%A0%E8%BD%BD/Runtime%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-%E5%88%86%E7%B1%BB%E7%9A%84%E5%8A%A0%E8%BD%BD.md)
 
 ##### rwe初始化
 
@@ -490,4 +490,4 @@ fixupMethodList(method_list_t *mlist, bool bundleCopy, bool sort)
 - 加载时机：第一次调用方法的时候加载。方法列表中查找`imp`时会进行一次判断，如果没有被实现过则会进行一次实现(具体查看`lookupImpOrForward`函数)
 - 优点：
   1. 把类的实现推迟到启动后，启动更快。
-  2. 一些类可能不会立马使用，避免内存浪费，已经段时间内的内存暴涨。
+  2. 一些类可能不会立马使用，避免内存浪费，以及一段时间内的内存暴涨。
