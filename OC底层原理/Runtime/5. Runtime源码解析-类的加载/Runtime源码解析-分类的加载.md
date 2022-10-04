@@ -18,7 +18,7 @@
         - [主类没有+只有一个分类，分类load](#主类没有只有一个分类分类load)
         - [主类没有+多个分类，超过一个分类load](#主类没有多个分类超过一个分类load)
       - [主类没有+分类没有](#主类没有分类没有)
-  - [attachCategories](#attachcategories)
+    - [attachCategories](#attachcategories)
       - [attachLists](#attachlists)
         - [0 lists -> 1list](#0-lists---1list)
         - [1 list -> many lists](#1-list---many-lists)
@@ -417,7 +417,7 @@ load_images(const char *path __unused, const struct mach_header *mh)
 - 这种情况下，前面加载的流程都没有走。由于主类和分类都没有实现`load`方法，所以是一个懒加载类的方式。只有在该类第一次发送消息是，才会调用类的加载流程。
 - 通过断点调试发现，分类的数据也合并在主类中了。
 
-## attachCategories
+### attachCategories
 
 前面我们讲解了，不同的分类+主类情况，会走不同的加载流程。接下来我们需要研究一下，具体是如何把分类的数据加载到主类上去的。所以最终我们还是回到了`attachCategories`方法中来
 
