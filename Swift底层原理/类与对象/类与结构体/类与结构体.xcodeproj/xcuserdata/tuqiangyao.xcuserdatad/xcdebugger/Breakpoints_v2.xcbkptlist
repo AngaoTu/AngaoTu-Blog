@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Bucket
+   uuid = "4D0AC035-240B-41FF-96FF-E099EB61CAB5"
+   type = "1"
+   version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "3AF29554-FA7B-44E7-A26F-21789C0B79E4"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "&#x7c7b;&#x4e0e;&#x7ed3;&#x6784;&#x4f53;/main.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "15"
+            endingLineNumber = "15"
+            landmarkName = "unknown"
+            landmarkType = "0">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.AddressBreakpoint">
+         <BreakpointContent
+            uuid = "F4800D9C-D607-4871-AAB6-6313FA012F7F"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "*0x1000037cc">
+            <Locations>
+               <Location
+                  uuid = "F4800D9C-D607-4871-AAB6-6313FA012F7F - 1a90ac6d036ad6ca"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "main"
+                  moduleName = "&#x7c7b;&#x4e0e;&#x7ed3;&#x6784;&#x4f53;"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/tuqiangyao/Library/Mobile%20Documents/com~apple~CloudDocs/AngaoTu-Blog/Swift%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/%E7%B1%BB%E4%B8%8E%E5%AF%B9%E8%B1%A1/%E7%B1%BB%E4%B8%8E%E7%BB%93%E6%9E%84%E4%BD%93/%E7%B1%BB%E4%B8%8E%E7%BB%93%E6%9E%84%E4%BD%93/main.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "15"
+                  endingLineNumber = "15"
+                  offsetFromSymbolStart = "24">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
+</Bucket>
