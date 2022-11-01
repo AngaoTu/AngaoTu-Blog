@@ -1,0 +1,205 @@
+sil_stage raw
+
+import Builtin
+import Swift
+import SwiftShims
+
+import Foundation
+
+protocol BaseProtocol {
+  func test()
+}
+
+extension BaseProtocol {
+  func test()
+}
+
+class TestClass : BaseProtocol {
+  @objc deinit
+  init()
+}
+
+@_hasStorage @_hasInitialValue var test: BaseProtocol { get set }
+
+@_hasStorage @_hasInitialValue var test1: TestClass { get set }
+
+// test
+sil_global hidden @$s4main4testAA12BaseProtocol_pvp : $BaseProtocol
+
+// test1
+sil_global hidden @$s4main5test1AA9TestClassCvp : $TestClass
+
+// main
+sil [ossa] @main : $@convention(c) (Int32, UnsafeMutablePointer<Optional<UnsafeMutablePointer<Int8>>>) -> Int32 {
+bb0(%0 : $Int32, %1 : $UnsafeMutablePointer<Optional<UnsafeMutablePointer<Int8>>>):
+  alloc_global @$s4main4testAA12BaseProtocol_pvp  // id: %2
+  %3 = global_addr @$s4main4testAA12BaseProtocol_pvp : $*BaseProtocol // users: %9, %7
+  %4 = metatype $@thick TestClass.Type            // user: %6
+  // function_ref TestClass.__allocating_init()
+  %5 = function_ref @$s4main9TestClassCACycfC : $@convention(method) (@thick TestClass.Type) -> @owned TestClass // user: %6
+  %6 = apply %5(%4) : $@convention(method) (@thick TestClass.Type) -> @owned TestClass // user: %8
+  %7 = init_existential_addr %3 : $*BaseProtocol, $TestClass // user: %8
+  store %6 to [init] %7 : $*TestClass             // id: %8
+  %9 = begin_access [read] [dynamic] %3 : $*BaseProtocol // users: %12, %11
+  %10 = alloc_stack $BaseProtocol                 // users: %17, %16, %13, %11
+  copy_addr %9 to [initialization] %10 : $*BaseProtocol // id: %11
+  end_access %9 : $*BaseProtocol                  // id: %12
+  %13 = open_existential_addr immutable_access %10 : $*BaseProtocol to $*@opened("93932B84-59EF-11ED-92C7-86E79974171B") BaseProtocol // users: %15, %15, %14
+  %14 = witness_method $@opened("93932B84-59EF-11ED-92C7-86E79974171B") BaseProtocol, #BaseProtocol.test : <Self where Self : BaseProtocol> (Self) -> () -> (), %13 : $*@opened("93932B84-59EF-11ED-92C7-86E79974171B") BaseProtocol : $@convention(witness_method: BaseProtocol) <τ_0_0 where τ_0_0 : BaseProtocol> (@in_guaranteed τ_0_0) -> () // type-defs: %13; user: %15
+  %15 = apply %14<@opened("93932B84-59EF-11ED-92C7-86E79974171B") BaseProtocol>(%13) : $@convention(witness_method: BaseProtocol) <τ_0_0 where τ_0_0 : BaseProtocol> (@in_guaranteed τ_0_0) -> () // type-defs: %13
+  destroy_addr %10 : $*BaseProtocol               // id: %16
+  dealloc_stack %10 : $*BaseProtocol              // id: %17
+  alloc_global @$s4main5test1AA9TestClassCvp      // id: %18
+  %19 = global_addr @$s4main5test1AA9TestClassCvp : $*TestClass // users: %24, %23
+  %20 = metatype $@thick TestClass.Type           // user: %22
+  // function_ref TestClass.__allocating_init()
+  %21 = function_ref @$s4main9TestClassCACycfC : $@convention(method) (@thick TestClass.Type) -> @owned TestClass // user: %22
+  %22 = apply %21(%20) : $@convention(method) (@thick TestClass.Type) -> @owned TestClass // user: %23
+  store %22 to [init] %19 : $*TestClass           // id: %23
+  %24 = begin_access [read] [dynamic] %19 : $*TestClass // users: %26, %25
+  %25 = load [copy] %24 : $*TestClass             // user: %28
+  end_access %24 : $*TestClass                    // id: %26
+  %27 = alloc_stack $TestClass                    // users: %32, %31, %30, %28
+  store %25 to [init] %27 : $*TestClass           // id: %28
+  // function_ref BaseProtocol.test()
+  %29 = function_ref @$s4main12BaseProtocolPAAE4testyyF : $@convention(method) <τ_0_0 where τ_0_0 : BaseProtocol> (@in_guaranteed τ_0_0) -> () // user: %30
+  %30 = apply %29<TestClass>(%27) : $@convention(method) <τ_0_0 where τ_0_0 : BaseProtocol> (@in_guaranteed τ_0_0) -> ()
+  destroy_addr %27 : $*TestClass                  // id: %31
+  dealloc_stack %27 : $*TestClass                 // id: %32
+  %33 = integer_literal $Builtin.Int32, 0         // user: %34
+  %34 = struct $Int32 (%33 : $Builtin.Int32)      // user: %35
+  return %34 : $Int32                             // id: %35
+} // end sil function 'main'
+
+// BaseProtocol.test()
+sil hidden [ossa] @$s4main12BaseProtocolPAAE4testyyF : $@convention(method) <Self where Self : BaseProtocol> (@in_guaranteed Self) -> () {
+// %0 "self"                                      // user: %1
+bb0(%0 : $*Self):
+  debug_value %0 : $*Self, let, name "self", argno 1, implicit, expr op_deref // id: %1
+  %2 = integer_literal $Builtin.Word, 1           // user: %4
+  // function_ref _allocateUninitializedArray<A>(_:)
+  %3 = function_ref @$ss27_allocateUninitializedArrayySayxG_BptBwlF : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer) // user: %4
+  %4 = apply %3<Any>(%2) : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer) // user: %5
+  (%5, %6) = destructure_tuple %4 : $(Array<Any>, Builtin.RawPointer) // users: %17, %7
+  %7 = pointer_to_address %6 : $Builtin.RawPointer to [strict] $*Any // user: %14
+  %8 = string_literal utf8 "BaseProtocol"         // user: %13
+  %9 = integer_literal $Builtin.Word, 12          // user: %13
+  %10 = integer_literal $Builtin.Int1, -1         // user: %13
+  %11 = metatype $@thin String.Type               // user: %13
+  // function_ref String.init(_builtinStringLiteral:utf8CodeUnitCount:isASCII:)
+  %12 = function_ref @$sSS21_builtinStringLiteral17utf8CodeUnitCount7isASCIISSBp_BwBi1_tcfC : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %13
+  %13 = apply %12(%8, %9, %10, %11) : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %15
+  %14 = init_existential_addr %7 : $*Any, $String // user: %15
+  store %13 to [init] %14 : $*String              // id: %15
+  // function_ref _finalizeUninitializedArray<A>(_:)
+  %16 = function_ref @$ss27_finalizeUninitializedArrayySayxGABnlF : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0> // user: %17
+  %17 = apply %16<Any>(%5) : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0> // users: %26, %23
+  // function_ref default argument 1 of print(_:separator:terminator:)
+  %18 = function_ref @$ss5print_9separator10terminatoryypd_S2StFfA0_ : $@convention(thin) () -> @owned String // user: %19
+  %19 = apply %18() : $@convention(thin) () -> @owned String // users: %25, %23
+  // function_ref default argument 2 of print(_:separator:terminator:)
+  %20 = function_ref @$ss5print_9separator10terminatoryypd_S2StFfA1_ : $@convention(thin) () -> @owned String // user: %21
+  %21 = apply %20() : $@convention(thin) () -> @owned String // users: %24, %23
+  // function_ref print(_:separator:terminator:)
+  %22 = function_ref @$ss5print_9separator10terminatoryypd_S2StF : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> () // user: %23
+  %23 = apply %22(%17, %19, %21) : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> ()
+  destroy_value %21 : $String                     // id: %24
+  destroy_value %19 : $String                     // id: %25
+  destroy_value %17 : $Array<Any>                 // id: %26
+  %27 = tuple ()                                  // user: %28
+  return %27 : $()                                // id: %28
+} // end sil function '$s4main12BaseProtocolPAAE4testyyF'
+
+// _allocateUninitializedArray<A>(_:)
+sil [serialized] [always_inline] [_semantics "array.uninitialized_intrinsic"] @$ss27_allocateUninitializedArrayySayxG_BptBwlF : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer)
+
+// String.init(_builtinStringLiteral:utf8CodeUnitCount:isASCII:)
+sil [serialized] [always_inline] [readonly] [_semantics "string.makeUTF8"] @$sSS21_builtinStringLiteral17utf8CodeUnitCount7isASCIISSBp_BwBi1_tcfC : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String
+
+// _finalizeUninitializedArray<A>(_:)
+sil hidden_external [serialized] [readnone] [_semantics "array.finalize_intrinsic"] @$ss27_finalizeUninitializedArrayySayxGABnlF : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0>
+
+// default argument 1 of print(_:separator:terminator:)
+sil hidden_external [serialized] @$ss5print_9separator10terminatoryypd_S2StFfA0_ : $@convention(thin) () -> @owned String
+
+// default argument 2 of print(_:separator:terminator:)
+sil hidden_external [serialized] @$ss5print_9separator10terminatoryypd_S2StFfA1_ : $@convention(thin) () -> @owned String
+
+// print(_:separator:terminator:)
+sil @$ss5print_9separator10terminatoryypd_S2StF : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> ()
+
+// TestClass.deinit
+sil hidden [ossa] @$s4main9TestClassCfd : $@convention(method) (@guaranteed TestClass) -> @owned Builtin.NativeObject {
+// %0 "self"                                      // users: %2, %1
+bb0(%0 : @guaranteed $TestClass):
+  debug_value %0 : $TestClass, let, name "self", argno 1, implicit // id: %1
+  %2 = unchecked_ref_cast %0 : $TestClass to $Builtin.NativeObject // user: %3
+  %3 = unchecked_ownership_conversion %2 : $Builtin.NativeObject, @guaranteed to @owned // user: %4
+  return %3 : $Builtin.NativeObject               // id: %4
+} // end sil function '$s4main9TestClassCfd'
+
+// TestClass.__deallocating_deinit
+sil hidden [ossa] @$s4main9TestClassCfD : $@convention(method) (@owned TestClass) -> () {
+// %0 "self"                                      // users: %6, %3, %1
+bb0(%0 : @owned $TestClass):
+  debug_value %0 : $TestClass, let, name "self", argno 1, implicit // id: %1
+  // function_ref TestClass.deinit
+  %2 = function_ref @$s4main9TestClassCfd : $@convention(method) (@guaranteed TestClass) -> @owned Builtin.NativeObject // user: %4
+  %3 = begin_borrow %0 : $TestClass               // users: %5, %4
+  %4 = apply %2(%3) : $@convention(method) (@guaranteed TestClass) -> @owned Builtin.NativeObject // user: %7
+  end_borrow %3 : $TestClass                      // id: %5
+  end_lifetime %0 : $TestClass                    // id: %6
+  %7 = unchecked_ref_cast %4 : $Builtin.NativeObject to $TestClass // user: %8
+  dealloc_ref %7 : $TestClass                     // id: %8
+  %9 = tuple ()                                   // user: %10
+  return %9 : $()                                 // id: %10
+} // end sil function '$s4main9TestClassCfD'
+
+// TestClass.__allocating_init()
+sil hidden [exact_self_class] [ossa] @$s4main9TestClassCACycfC : $@convention(method) (@thick TestClass.Type) -> @owned TestClass {
+// %0 "$metatype"
+bb0(%0 : $@thick TestClass.Type):
+  %1 = alloc_ref $TestClass                       // user: %3
+  // function_ref TestClass.init()
+  %2 = function_ref @$s4main9TestClassCACycfc : $@convention(method) (@owned TestClass) -> @owned TestClass // user: %3
+  %3 = apply %2(%1) : $@convention(method) (@owned TestClass) -> @owned TestClass // user: %4
+  return %3 : $TestClass                          // id: %4
+} // end sil function '$s4main9TestClassCACycfC'
+
+// TestClass.init()
+sil hidden [ossa] @$s4main9TestClassCACycfc : $@convention(method) (@owned TestClass) -> @owned TestClass {
+// %0 "self"                                      // users: %2, %1
+bb0(%0 : @owned $TestClass):
+  debug_value %0 : $TestClass, let, name "self", argno 1, implicit // id: %1
+  %2 = mark_uninitialized [rootself] %0 : $TestClass // users: %4, %3
+  %3 = copy_value %2 : $TestClass                 // user: %5
+  destroy_value %2 : $TestClass                   // id: %4
+  return %3 : $TestClass                          // id: %5
+} // end sil function '$s4main9TestClassCACycfc'
+
+// protocol witness for BaseProtocol.test() in conformance TestClass
+sil private [transparent] [thunk] [ossa] @$s4main9TestClassCAA12BaseProtocolA2aDP4testyyFTW : $@convention(witness_method: BaseProtocol) <τ_0_0 where τ_0_0 : TestClass> (@in_guaranteed τ_0_0) -> () {
+// %0                                             // user: %2
+bb0(%0 : $*τ_0_0):
+  // function_ref BaseProtocol.test()
+  %1 = function_ref @$s4main12BaseProtocolPAAE4testyyF : $@convention(method) <τ_0_0 where τ_0_0 : BaseProtocol> (@in_guaranteed τ_0_0) -> () // user: %2
+  %2 = apply %1<τ_0_0>(%0) : $@convention(method) <τ_0_0 where τ_0_0 : BaseProtocol> (@in_guaranteed τ_0_0) -> ()
+  %3 = tuple ()                                   // user: %4
+  return %3 : $()                                 // id: %4
+} // end sil function '$s4main9TestClassCAA12BaseProtocolA2aDP4testyyFTW'
+
+sil_vtable TestClass {
+  #TestClass.init!allocator: (TestClass.Type) -> () -> TestClass : @$s4main9TestClassCACycfC	// TestClass.__allocating_init()
+  #TestClass.deinit!deallocator: @$s4main9TestClassCfD	// TestClass.__deallocating_deinit
+}
+
+sil_witness_table hidden TestClass: BaseProtocol module main {
+  method #BaseProtocol.test: <Self where Self : BaseProtocol> (Self) -> () -> () : @$s4main9TestClassCAA12BaseProtocolA2aDP4testyyFTW	// protocol witness for BaseProtocol.test() in conformance TestClass
+}
+
+
+
+// Mappings from '#fileID' to '#filePath':
+//   'main/main.swift' => 'main.swift'
+
+

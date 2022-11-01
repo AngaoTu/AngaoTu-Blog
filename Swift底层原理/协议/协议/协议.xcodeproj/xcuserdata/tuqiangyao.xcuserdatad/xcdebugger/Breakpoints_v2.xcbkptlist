@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Bucket
+   uuid = "B13591BE-C9AC-475D-9EAC-46ADD5F8E400"
+   type = "1"
+   version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "56F16B35-88FE-4AF6-8D14-9825CB3BB9AA"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "&#x534f;&#x8bae;/main.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "27"
+            endingLineNumber = "27"
+            landmarkName = "unknown"
+            landmarkType = "0">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.AddressBreakpoint">
+         <BreakpointContent
+            uuid = "47269593-F4B9-40E1-82AD-844784FF4F02"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "*0x100003a4c">
+            <Locations>
+               <Location
+                  uuid = "47269593-F4B9-40E1-82AD-844784FF4F02 - 668d9e3bdaf4f8aa"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "main"
+                  moduleName = "&#x534f;&#x8bae;"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/tuqiangyao/Library/Mobile%20Documents/com~apple~CloudDocs/AngaoTu-Blog/Swift%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/%E5%8D%8F%E8%AE%AE/%E5%8D%8F%E8%AE%AE/%E5%8D%8F%E8%AE%AE/main.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "27"
+                  endingLineNumber = "27"
+                  offsetFromSymbolStart = "52">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
+</Bucket>
