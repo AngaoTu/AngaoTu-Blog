@@ -25,8 +25,3 @@ class TestClass: BaseProtocol {
 
 
 var test: BaseProtocol = TestClass()
-
-//var test1: TestClass = TestClass()
-
-//print("test size: \(MemoryLayout.size(ofValue: test))") // BaseProtocol size: 40
-//print("test1 size: \(MemoryLayout.size(ofValue: test1))")   // TestClass size: 8

@@ -1,4 +1,28 @@
-[toc]
+- [Swift底层原理-协议](#swift底层原理-协议)
+  - [协议的基本用法](#协议的基本用法)
+    - [协议的定义](#协议的定义)
+    - [协议中的属性](#协议中的属性)
+    - [协议的方法](#协议的方法)
+      - [类型方法](#类型方法)
+      - [异变方法](#异变方法)
+      - [初始化方法](#初始化方法)
+    - [可选协议](#可选协议)
+    - [协议的继承和组合](#协议的继承和组合)
+  - [协议的底层原理](#协议的底层原理)
+    - [协议的方法调度](#协议的方法调度)
+      - [类实现协议](#类实现协议)
+        - [静态类型为类类型](#静态类型为类类型)
+        - [静态类型为协议类型](#静态类型为协议类型)
+      - [结构体实现协议](#结构体实现协议)
+        - [静态类型为结构体类型](#静态类型为结构体类型)
+        - [静态类型为协议类型](#静态类型为协议类型-1)
+    - [extention中提供方法的默认实现](#extention中提供方法的默认实现)
+      - [协议中未声明方法，分类中声明并实现](#协议中未声明方法分类中声明并实现)
+      - [协议中声明方法，分类中实现](#协议中声明方法分类中实现)
+    - [协议的结构](#协议的结构)
+      - [witness_table的结构](#witness_table的结构)
+      - [Existential Container-存在容器](#existential-container-存在容器)
+
 
 # Swift底层原理-协议
 
@@ -606,5 +630,153 @@ print("test1 size: \(MemoryLayout.size(ofValue: test1))")
   - 第四个8字节存储的是实例对象的`metadate`
   - 最后的8字节存储的其实是`witness_table`的地址。
 
-- 为什么说最后8字节就是`witness_table`的地址呢？
-- 
+- 为什么说最后8字节就是`witness_table`的地址呢？打开汇编调试，找到`test`创建后`witness_table`相关的代码
+
+![](https://tva1.sinaimg.cn/large/008vxvgGgy1h7q0vcni60j32ar0u0dlq.jpg)
+
+- 如图所有最后8字节是`witness_table`地址。
+
+#### witness_table的结构
+
+- 在上面我们知道了`witness_table`在内存中存储的位置，那么这个结构是这么样的呢？
+
+- 接下来我们就直接将当前的`main.swift`文件编译成`main.ll`文件。避免干扰，把`test1`变量和打印注释了
+
+```c++
+define i32 @main(i32 %0, i8** %1) #0 {
+entry:
+  %2 = bitcast i8** %1 to i8*
+  // 获取TestClass的metadata
+  %3 = call swiftcc %swift.metadata_response @"type metadata accessor for main.TestClass"(i64 0) #7
+  %4 = extractvalue %swift.metadata_response %3, 0
+  // %swift.type = type { i64 }
+  // %swift.refcounted = type { %swift.type*, i64 }
+  // %T4main9TestClassC = type <{ %swift.refcounted, %TSd }>
+  // 创建Test实例
+  %5 = call swiftcc %T4main9TestClassC* @"main.TestClass.__allocating_init() -> main.TestClass"(%swift.type* swiftself %4)
+  
+  // %T4main12BaseProtocolP = type { [24 x i8], %swift.type*, i8** }，%T4main12BaseProtocolP 本质上是一个结构体
+  // 注意看，getelementptr为获取结构体成员，i32 0 结构体的内存地址，拿到这个结构体后将 %4 存储到这个结构体的第二个成员变量上
+  // 也就是将 metadata 存储到这个结构体的第二个成员变量上，此时这个结构体的结构为：{ [24 x i8], metadata, i8** }
+  store %swift.type* %4, %swift.type** getelementptr inbounds (%T4main12BaseProtocolP, %T4main12BaseProtocolP* @"main.test : main.BaseProtocol", i32 0, i32 1), align 8
+
+  // 这一行在获取 witness table，然后将 witness table 存储到 %T4main12BaseProtocolP 这个结构体的第三个成员变量上（因为取的是 i32 2）
+  // 此时 %T4main5ShapeP 的结构为：{ [24 x i8], metadata, witness_table }
+  store i8** getelementptr inbounds ([2 x i8*], [2 x i8*]* @"protocol witness table for main.TestClass : main.BaseProtocol in main", i32 0, i32 0), i8*** getelementptr inbounds (%T4main12BaseProtocolP, %T4main12BaseProtocolP* @"main.test : main.BaseProtocol", i32 0, i32 2), align 8
+  
+  // [24 x i8] 是 24 个 Int8 数组,内存中等价 [3 x i64] 数组,等价于 %T4main5ShapeP = type { [3 x i64], %swift.type*, i8** }
+  // 这里是将 %T4main5ShapeP 这个结构体强制转换成 %T4main9TestClassC，此时的结构为：{ [3 x i64], metadata, witness_table }
+  // 然后把 %5 存放到 %T4main12BaseProtocolP 的第一个元素。所以最后的结构为：{ [%T4main9TestClassC*, i64, i64], metadata, witness_table },    
+  store %T4main9TestClassC* %5, %T4main9TestClassC** bitcast (%T4main12BaseProtocolP* @"main.test : main.BaseProtocol" to %T4main9TestClassC**), align 8
+  ret i32 0
+}
+```
+
+- 接下来我们查看一下`witness_table`的内存结构
+
+```c++
+@"protocol witness table for main.TestClass : main.BaseProtocol in main" = hidden constant [2 x i8*] 
+	[i8* bitcast (%swift.protocol_conformance_descriptor* @"protocol conformance descriptor for main.TestClass : main.BaseProtocol in main" to i8*), 
+    i8* bitcast (void (%T4main9TestClassC**, %swift.type*, i8**)* @"protocol witness for main.BaseProtocol.test() -> () in conformance main.TestClass : main.BaseProtocol in main" to i8*)], 
+	align 8
+```
+
+- 可以看到这个结构中有两个成员，第一个成员是描述信息，第二个成员是`test`协议方法地址。
+- 下面我们通过源码来分析`witness_table`
+
+```c++
+template <typename Runtime>
+class TargetWitnessTable {
+  /// The protocol conformance descriptor from which this witness table
+  /// was generated.
+  ConstTargetMetadataPointer<Runtime, TargetProtocolConformanceDescriptor>
+    Description;
+
+public:
+  const TargetProtocolConformanceDescriptor<Runtime> *getDescription() const {
+    return Description;
+  }
+};
+```
+
+- 发现它内部有一个`Description`成员变量，我们查看一下它的类型
+
+```c++
+template <typename Runtime>
+struct TargetProtocolConformanceDescriptor final
+  : public swift::ABI::TrailingObjects<
+             TargetProtocolConformanceDescriptor<Runtime>,
+             TargetRelativeContextPointer<Runtime>,
+             TargetGenericRequirementDescriptor<Runtime>,
+             TargetResilientWitnessesHeader<Runtime>,
+             TargetResilientWitness<Runtime>,
+             TargetGenericWitnessTable<Runtime>> {
+	// 省略部分方法
+
+private:
+  /// The protocol being conformed to.
+  TargetRelativeContextPointer<Runtime, TargetProtocolDescriptor> Protocol;
+  
+  // Some description of the type that conforms to the protocol.
+  TargetTypeReference<Runtime> TypeRef;
+
+  /// The witness table pattern, which may also serve as the witness table.
+  RelativeDirectPointer<const TargetWitnessTable<Runtime>> WitnessTablePattern;
+
+  /// Various flags, including the kind of conformance.
+  ConformanceFlags Flags;
+}
+```
+
+- 它有四个成员变量，描述了`witness_table`的一些基本信息。
+- 我们看`Protocol`这个成员变量，它是一个**相对类型指针**，其类型的结构为 `TargetProtocolDescriptor`
+
+```c++
+template<typename Runtime>
+struct TargetProtocolDescriptor final
+    : TargetContextDescriptor<Runtime>,
+      swift::ABI::TrailingObjects<
+        TargetProtocolDescriptor<Runtime>,
+        TargetGenericRequirementDescriptor<Runtime>,
+        TargetProtocolRequirement<Runtime>>
+{
+  // 省略部分方法
+private:
+  /// The name of the protocol.
+  TargetRelativeDirectPointer<Runtime, const char, /*nullable*/ false> Name;
+
+  /// The number of generic requirements in the requirement signature of the
+  /// protocol.
+  uint32_t NumRequirementsInSignature;
+
+  /// The number of requirements in the protocol.
+  /// If any requirements beyond MinimumWitnessTableSizeInWords are present
+  /// in the witness table template, they will be not be overwritten with
+  /// defaults.
+  uint32_t NumRequirements;
+
+  /// Associated type names, as a space-separated list in the same order
+  /// as the requirements.
+  RelativeDirectPointer<const char, /*Nullable=*/true> AssociatedTypeNames;
+
+  // 省略部分方法
+}
+```
+
+- 内部一些属性，描述了协议的名称、关联类型等一些信息
+
+- 总结：
+  - 每个遵守了协议的类，都会有自己的`PWT`，遵守的协议越多，PWT中存储的函数地址就越多
+  - `PWT`的本质是一个指针数组，第一个元素存储`TargetProtocolConformanceDescriptor`，其后面存储的是连续的函数地址
+  - `PWT`的数量与协议数量一致
+
+#### Existential Container-存在容器
+
+- `Existential container`是编译器生成的一种特殊的数据类型，用于管理遵守了相同协议的协议类型，因为这些类型的内存大小不一致，所以通过当前的`Existential Container`统一做管理
+- 它遵循两个原则
+  - 对于小容量的数据，直接存储在`Value Buffer` (小于等于24字节)
+  - 对于大容量的数据，通过堆区分配，存储堆空间的地址
+- 协议的结构就是存在容器，这个存在容器最后的两个 8 字节存储的内容是固定的，存储的是这个实例类型的元类型和协议的见证表。
+- 那这前3个8字节存了什么？
+  - 若对象是引用类型实例，则前8 字节是实例地址的信息
+  - 若对象是值类型实例，则前24 字节是属性值信息，或者前8 字节是存放属性值的地址空间地址信息
