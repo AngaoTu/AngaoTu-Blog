@@ -1,0 +1,1035 @@
+sil_stage raw
+
+import Builtin
+import Swift
+import SwiftShims
+
+import Foundation
+
+struct Product : Decodable & Encodable {
+  @_hasStorage var name: String { get set }
+  @_hasStorage var age: Int { get set }
+  @_hasStorage @_hasInitialValue var description: String? { get set }
+  enum CodingKeys : CodingKey {
+    case name
+    case age
+    case description
+    @_implements(Equatable, ==(_:_:)) static func __derived_enum_equals(_ a: Product.CodingKeys, _ b: Product.CodingKeys) -> Bool
+    func hash(into hasher: inout Hasher)
+    init?(stringValue: String)
+    init?(intValue: Int)
+    var hashValue: Int { get }
+    var intValue: Int? { get }
+    var stringValue: String { get }
+  }
+  func encode(to encoder: Encoder) throws
+  init(from decoder: Decoder) throws
+  init(name: String, age: Int, description: String? = nil)
+}
+
+// main
+sil [ossa] @main : $@convention(c) (Int32, UnsafeMutablePointer<Optional<UnsafeMutablePointer<Int8>>>) -> Int32 {
+bb0(%0 : $Int32, %1 : $UnsafeMutablePointer<Optional<UnsafeMutablePointer<Int8>>>):
+  %2 = integer_literal $Builtin.Int32, 0          // user: %3
+  %3 = struct $Int32 (%2 : $Builtin.Int32)        // user: %4
+  return %3 : $Int32                              // id: %4
+} // end sil function 'main'
+
+// Product.name.getter
+sil hidden [transparent] [ossa] @$s4main7ProductV4nameSSvg : $@convention(method) (@guaranteed Product) -> @owned String {
+// %0 "self"                                      // users: %2, %1
+bb0(%0 : @guaranteed $Product):
+  debug_value %0 : $Product, let, name "self", argno 1, implicit // id: %1
+  %2 = struct_extract %0 : $Product, #Product.name // user: %3
+  %3 = copy_value %2 : $String                    // user: %4
+  return %3 : $String                             // id: %4
+} // end sil function '$s4main7ProductV4nameSSvg'
+
+// Product.name.setter
+sil hidden [transparent] [ossa] @$s4main7ProductV4nameSSvs : $@convention(method) (@owned String, @inout Product) -> () {
+// %0 "value"                                     // users: %11, %2
+// %1 "self"                                      // users: %6, %4
+bb0(%0 : @owned $String, %1 : $*Product):
+  %2 = begin_borrow [lexical] %0 : $String        // users: %10, %5, %3
+  debug_value %2 : $String, let, name "value", argno 1, implicit // id: %3
+  debug_value %1 : $*Product, var, name "self", argno 2, implicit, expr op_deref // id: %4
+  %5 = copy_value %2 : $String                    // user: %8
+  %6 = begin_access [modify] [unknown] %1 : $*Product // users: %9, %7
+  %7 = struct_element_addr %6 : $*Product, #Product.name // user: %8
+  assign %5 to %7 : $*String                      // id: %8
+  end_access %6 : $*Product                       // id: %9
+  end_borrow %2 : $String                         // id: %10
+  destroy_value %0 : $String                      // id: %11
+  %12 = tuple ()                                  // user: %13
+  return %12 : $()                                // id: %13
+} // end sil function '$s4main7ProductV4nameSSvs'
+
+// Product.name.modify
+sil hidden [transparent] [ossa] @$s4main7ProductV4nameSSvM : $@yield_once @convention(method) (@inout Product) -> @yields @inout String {
+// %0 "self"                                      // users: %2, %1
+bb0(%0 : $*Product):
+  debug_value %0 : $*Product, var, name "self", argno 1, implicit, expr op_deref // id: %1
+  %2 = begin_access [modify] [unknown] %0 : $*Product // users: %5, %8, %3
+  %3 = struct_element_addr %2 : $*Product, #Product.name // user: %4
+  yield %3 : $*String, resume bb1, unwind bb2     // id: %4
+
+bb1:                                              // Preds: bb0
+  end_access %2 : $*Product                       // id: %5
+  %6 = tuple ()                                   // user: %7
+  return %6 : $()                                 // id: %7
+
+bb2:                                              // Preds: bb0
+  end_access %2 : $*Product                       // id: %8
+  unwind                                          // id: %9
+} // end sil function '$s4main7ProductV4nameSSvM'
+
+// Product.age.getter
+sil hidden [transparent] [ossa] @$s4main7ProductV3ageSivg : $@convention(method) (@guaranteed Product) -> Int {
+// %0 "self"                                      // users: %2, %1
+bb0(%0 : @guaranteed $Product):
+  debug_value %0 : $Product, let, name "self", argno 1, implicit // id: %1
+  %2 = struct_extract %0 : $Product, #Product.age // user: %3
+  return %2 : $Int                                // id: %3
+} // end sil function '$s4main7ProductV3ageSivg'
+
+// Product.age.setter
+sil hidden [transparent] [ossa] @$s4main7ProductV3ageSivs : $@convention(method) (Int, @inout Product) -> () {
+// %0 "value"                                     // users: %6, %2
+// %1 "self"                                      // users: %4, %3
+bb0(%0 : $Int, %1 : $*Product):
+  debug_value %0 : $Int, let, name "value", argno 1, implicit // id: %2
+  debug_value %1 : $*Product, var, name "self", argno 2, implicit, expr op_deref // id: %3
+  %4 = begin_access [modify] [unknown] %1 : $*Product // users: %7, %5
+  %5 = struct_element_addr %4 : $*Product, #Product.age // user: %6
+  assign %0 to %5 : $*Int                         // id: %6
+  end_access %4 : $*Product                       // id: %7
+  %8 = tuple ()                                   // user: %9
+  return %8 : $()                                 // id: %9
+} // end sil function '$s4main7ProductV3ageSivs'
+
+// Product.age.modify
+sil hidden [transparent] [ossa] @$s4main7ProductV3ageSivM : $@yield_once @convention(method) (@inout Product) -> @yields @inout Int {
+// %0 "self"                                      // users: %2, %1
+bb0(%0 : $*Product):
+  debug_value %0 : $*Product, var, name "self", argno 1, implicit, expr op_deref // id: %1
+  %2 = begin_access [modify] [unknown] %0 : $*Product // users: %5, %8, %3
+  %3 = struct_element_addr %2 : $*Product, #Product.age // user: %4
+  yield %3 : $*Int, resume bb1, unwind bb2        // id: %4
+
+bb1:                                              // Preds: bb0
+  end_access %2 : $*Product                       // id: %5
+  %6 = tuple ()                                   // user: %7
+  return %6 : $()                                 // id: %7
+
+bb2:                                              // Preds: bb0
+  end_access %2 : $*Product                       // id: %8
+  unwind                                          // id: %9
+} // end sil function '$s4main7ProductV3ageSivM'
+
+// variable initialization expression of Product.description
+sil hidden [transparent] [ossa] @$s4main7ProductV11descriptionSSSgvpfi : $@convention(thin) () -> @owned Optional<String> {
+bb0:
+  %0 = enum $Optional<String>, #Optional.none!enumelt // user: %1
+  return %0 : $Optional<String>                   // id: %1
+} // end sil function '$s4main7ProductV11descriptionSSSgvpfi'
+
+// Product.description.getter
+sil hidden [transparent] [ossa] @$s4main7ProductV11descriptionSSSgvg : $@convention(method) (@guaranteed Product) -> @owned Optional<String> {
+// %0 "self"                                      // users: %2, %1
+bb0(%0 : @guaranteed $Product):
+  debug_value %0 : $Product, let, name "self", argno 1, implicit // id: %1
+  %2 = struct_extract %0 : $Product, #Product.description // user: %3
+  %3 = copy_value %2 : $Optional<String>          // user: %4
+  return %3 : $Optional<String>                   // id: %4
+} // end sil function '$s4main7ProductV11descriptionSSSgvg'
+
+// Product.description.setter
+sil hidden [transparent] [ossa] @$s4main7ProductV11descriptionSSSgvs : $@convention(method) (@owned Optional<String>, @inout Product) -> () {
+// %0 "value"                                     // users: %11, %2
+// %1 "self"                                      // users: %6, %4
+bb0(%0 : @owned $Optional<String>, %1 : $*Product):
+  %2 = begin_borrow [lexical] %0 : $Optional<String> // users: %10, %5, %3
+  debug_value %2 : $Optional<String>, let, name "value", argno 1, implicit // id: %3
+  debug_value %1 : $*Product, var, name "self", argno 2, implicit, expr op_deref // id: %4
+  %5 = copy_value %2 : $Optional<String>          // user: %8
+  %6 = begin_access [modify] [unknown] %1 : $*Product // users: %9, %7
+  %7 = struct_element_addr %6 : $*Product, #Product.description // user: %8
+  assign %5 to %7 : $*Optional<String>            // id: %8
+  end_access %6 : $*Product                       // id: %9
+  end_borrow %2 : $Optional<String>               // id: %10
+  destroy_value %0 : $Optional<String>            // id: %11
+  %12 = tuple ()                                  // user: %13
+  return %12 : $()                                // id: %13
+} // end sil function '$s4main7ProductV11descriptionSSSgvs'
+
+// Product.description.modify
+sil hidden [transparent] [ossa] @$s4main7ProductV11descriptionSSSgvM : $@yield_once @convention(method) (@inout Product) -> @yields @inout Optional<String> {
+// %0 "self"                                      // users: %2, %1
+bb0(%0 : $*Product):
+  debug_value %0 : $*Product, var, name "self", argno 1, implicit, expr op_deref // id: %1
+  %2 = begin_access [modify] [unknown] %0 : $*Product // users: %5, %8, %3
+  %3 = struct_element_addr %2 : $*Product, #Product.description // user: %4
+  yield %3 : $*Optional<String>, resume bb1, unwind bb2 // id: %4
+
+bb1:                                              // Preds: bb0
+  end_access %2 : $*Product                       // id: %5
+  %6 = tuple ()                                   // user: %7
+  return %6 : $()                                 // id: %7
+
+bb2:                                              // Preds: bb0
+  end_access %2 : $*Product                       // id: %8
+  unwind                                          // id: %9
+} // end sil function '$s4main7ProductV11descriptionSSSgvM'
+
+// static Product.CodingKeys.__derived_enum_equals(_:_:)
+sil private [ossa] @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLO21__derived_enum_equalsySbAF_AFtFZ : $@convention(method) (Product.CodingKeys, Product.CodingKeys, @thin Product.CodingKeys.Type) -> Bool {
+// %0 "a"                                         // users: %9, %3
+// %1 "b"                                         // users: %37, %4
+// %2 "self"                                      // user: %5
+bb0(%0 : $Product.CodingKeys, %1 : $Product.CodingKeys, %2 : $@thin Product.CodingKeys.Type):
+  debug_value %0 : $Product.CodingKeys, let, name "a", argno 1, implicit // id: %3
+  debug_value %1 : $Product.CodingKeys, let, name "b", argno 2, implicit // id: %4
+  debug_value %2 : $@thin Product.CodingKeys.Type, let, name "self", argno 3, implicit // id: %5
+  %6 = alloc_box ${ var Int }, var, name "index_a" // user: %7
+  %7 = mark_uninitialized [var] %6 : ${ var Int } // users: %68, %8
+  %8 = project_box %7 : ${ var Int }, 0           // users: %63, %30, %22, %14
+  switch_enum %0 : $Product.CodingKeys, case #Product.CodingKeys.name!enumelt: bb1, case #Product.CodingKeys.age!enumelt: bb2, case #Product.CodingKeys.description!enumelt: bb3 // id: %9
+
+bb1:                                              // Preds: bb0
+  %10 = integer_literal $Builtin.IntLiteral, 0    // user: %13
+  %11 = metatype $@thin Int.Type                  // user: %13
+  // function_ref Int.init(_builtinIntegerLiteral:)
+  %12 = function_ref @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %13
+  %13 = apply %12(%10, %11) : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %15
+  %14 = begin_access [modify] [unknown] %8 : $*Int // users: %16, %15
+  assign %13 to %14 : $*Int                       // id: %15
+  end_access %14 : $*Int                          // id: %16
+  br bb4                                          // id: %17
+
+bb2:                                              // Preds: bb0
+  %18 = integer_literal $Builtin.IntLiteral, 1    // user: %21
+  %19 = metatype $@thin Int.Type                  // user: %21
+  // function_ref Int.init(_builtinIntegerLiteral:)
+  %20 = function_ref @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %21
+  %21 = apply %20(%18, %19) : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %23
+  %22 = begin_access [modify] [unknown] %8 : $*Int // users: %24, %23
+  assign %21 to %22 : $*Int                       // id: %23
+  end_access %22 : $*Int                          // id: %24
+  br bb4                                          // id: %25
+
+bb3:                                              // Preds: bb0
+  %26 = integer_literal $Builtin.IntLiteral, 2    // user: %29
+  %27 = metatype $@thin Int.Type                  // user: %29
+  // function_ref Int.init(_builtinIntegerLiteral:)
+  %28 = function_ref @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %29
+  %29 = apply %28(%26, %27) : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %31
+  %30 = begin_access [modify] [unknown] %8 : $*Int // users: %32, %31
+  assign %29 to %30 : $*Int                       // id: %31
+  end_access %30 : $*Int                          // id: %32
+  br bb4                                          // id: %33
+
+bb4:                                              // Preds: bb3 bb2 bb1
+  %34 = alloc_box ${ var Int }, var, name "index_b" // user: %35
+  %35 = mark_uninitialized [var] %34 : ${ var Int } // users: %67, %36
+  %36 = project_box %35 : ${ var Int }, 0         // users: %64, %58, %50, %42
+  switch_enum %1 : $Product.CodingKeys, case #Product.CodingKeys.name!enumelt: bb5, case #Product.CodingKeys.age!enumelt: bb6, case #Product.CodingKeys.description!enumelt: bb7 // id: %37
+
+bb5:                                              // Preds: bb4
+  %38 = integer_literal $Builtin.IntLiteral, 0    // user: %41
+  %39 = metatype $@thin Int.Type                  // user: %41
+  // function_ref Int.init(_builtinIntegerLiteral:)
+  %40 = function_ref @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %41
+  %41 = apply %40(%38, %39) : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %43
+  %42 = begin_access [modify] [unknown] %36 : $*Int // users: %44, %43
+  assign %41 to %42 : $*Int                       // id: %43
+  end_access %42 : $*Int                          // id: %44
+  br bb8                                          // id: %45
+
+bb6:                                              // Preds: bb4
+  %46 = integer_literal $Builtin.IntLiteral, 1    // user: %49
+  %47 = metatype $@thin Int.Type                  // user: %49
+  // function_ref Int.init(_builtinIntegerLiteral:)
+  %48 = function_ref @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %49
+  %49 = apply %48(%46, %47) : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %51
+  %50 = begin_access [modify] [unknown] %36 : $*Int // users: %52, %51
+  assign %49 to %50 : $*Int                       // id: %51
+  end_access %50 : $*Int                          // id: %52
+  br bb8                                          // id: %53
+
+bb7:                                              // Preds: bb4
+  %54 = integer_literal $Builtin.IntLiteral, 2    // user: %57
+  %55 = metatype $@thin Int.Type                  // user: %57
+  // function_ref Int.init(_builtinIntegerLiteral:)
+  %56 = function_ref @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %57
+  %57 = apply %56(%54, %55) : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %59
+  %58 = begin_access [modify] [unknown] %36 : $*Int // users: %60, %59
+  assign %57 to %58 : $*Int                       // id: %59
+  end_access %58 : $*Int                          // id: %60
+  br bb8                                          // id: %61
+
+bb8:                                              // Preds: bb7 bb6 bb5
+  %62 = metatype $@thin Int.Type                  // user: %66
+  %63 = load [trivial] %8 : $*Int                 // user: %66
+  %64 = load [trivial] %36 : $*Int                // user: %66
+  // function_ref static Int.== infix(_:_:)
+  %65 = function_ref @$sSi2eeoiySbSi_SitFZ : $@convention(method) (Int, Int, @thin Int.Type) -> Bool // user: %66
+  %66 = apply %65(%63, %64, %62) : $@convention(method) (Int, Int, @thin Int.Type) -> Bool // user: %69
+  destroy_value %35 : ${ var Int }                // id: %67
+  destroy_value %7 : ${ var Int }                 // id: %68
+  return %66 : $Bool                              // id: %69
+} // end sil function '$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLO21__derived_enum_equalsySbAF_AFtFZ'
+
+// Product.CodingKeys.hash(into:)
+sil private [ossa] @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLO4hash4intoys6HasherVz_tF : $@convention(method) (@inout Hasher, Product.CodingKeys) -> () {
+// %0 "hasher"                                    // users: %37, %2
+// %1 "self"                                      // users: %7, %3
+bb0(%0 : $*Hasher, %1 : $Product.CodingKeys):
+  debug_value %0 : $*Hasher, var, name "hasher", argno 1, implicit, expr op_deref // id: %2
+  debug_value %1 : $Product.CodingKeys, let, name "self", argno 2, implicit // id: %3
+  %4 = alloc_box ${ var Int }, var, name "discriminator" // user: %5
+  %5 = mark_uninitialized [var] %4 : ${ var Int } // users: %42, %6
+  %6 = project_box %5 : ${ var Int }, 0           // users: %32, %28, %20, %12
+  switch_enum %1 : $Product.CodingKeys, case #Product.CodingKeys.name!enumelt: bb1, case #Product.CodingKeys.age!enumelt: bb2, case #Product.CodingKeys.description!enumelt: bb3 // id: %7
+
+bb1:                                              // Preds: bb0
+  %8 = integer_literal $Builtin.IntLiteral, 0     // user: %11
+  %9 = metatype $@thin Int.Type                   // user: %11
+  // function_ref Int.init(_builtinIntegerLiteral:)
+  %10 = function_ref @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %11
+  %11 = apply %10(%8, %9) : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %13
+  %12 = begin_access [modify] [unknown] %6 : $*Int // users: %14, %13
+  assign %11 to %12 : $*Int                       // id: %13
+  end_access %12 : $*Int                          // id: %14
+  br bb4                                          // id: %15
+
+bb2:                                              // Preds: bb0
+  %16 = integer_literal $Builtin.IntLiteral, 1    // user: %19
+  %17 = metatype $@thin Int.Type                  // user: %19
+  // function_ref Int.init(_builtinIntegerLiteral:)
+  %18 = function_ref @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %19
+  %19 = apply %18(%16, %17) : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %21
+  %20 = begin_access [modify] [unknown] %6 : $*Int // users: %22, %21
+  assign %19 to %20 : $*Int                       // id: %21
+  end_access %20 : $*Int                          // id: %22
+  br bb4                                          // id: %23
+
+bb3:                                              // Preds: bb0
+  %24 = integer_literal $Builtin.IntLiteral, 2    // user: %27
+  %25 = metatype $@thin Int.Type                  // user: %27
+  // function_ref Int.init(_builtinIntegerLiteral:)
+  %26 = function_ref @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %27
+  %27 = apply %26(%24, %25) : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %29
+  %28 = begin_access [modify] [unknown] %6 : $*Int // users: %30, %29
+  assign %27 to %28 : $*Int                       // id: %29
+  end_access %28 : $*Int                          // id: %30
+  br bb4                                          // id: %31
+
+bb4:                                              // Preds: bb3 bb2 bb1
+  %32 = begin_access [read] [unknown] %6 : $*Int  // users: %34, %33
+  %33 = load [trivial] %32 : $*Int                // user: %36
+  end_access %32 : $*Int                          // id: %34
+  %35 = alloc_stack $Int                          // users: %41, %39, %36
+  store %33 to [trivial] %35 : $*Int              // id: %36
+  %37 = begin_access [modify] [unknown] %0 : $*Hasher // users: %40, %39
+  // function_ref Hasher.combine<A>(_:)
+  %38 = function_ref @$ss6HasherV7combineyyxSHRzlF : $@convention(method) <τ_0_0 where τ_0_0 : Hashable> (@in_guaranteed τ_0_0, @inout Hasher) -> () // user: %39
+  %39 = apply %38<Int>(%35, %37) : $@convention(method) <τ_0_0 where τ_0_0 : Hashable> (@in_guaranteed τ_0_0, @inout Hasher) -> ()
+  end_access %37 : $*Hasher                       // id: %40
+  dealloc_stack %35 : $*Int                       // id: %41
+  destroy_value %5 : ${ var Int }                 // id: %42
+  %43 = tuple ()                                  // user: %44
+  return %43 : $()                                // id: %44
+} // end sil function '$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLO4hash4intoys6HasherVz_tF'
+
+// Product.CodingKeys.init(stringValue:)
+sil private [ossa] @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLO11stringValueAFSgSS_tcfC : $@convention(method) (@owned String, @thin Product.CodingKeys.Type) -> Optional<Product.CodingKeys> {
+// %0 "stringValue"                               // users: %101, %105, %5
+// %1 "$metatype"
+bb0(%0 : @owned $String, %1 : $@thin Product.CodingKeys.Type):
+  %2 = alloc_box ${ var Product.CodingKeys }, var, name "self" // user: %3
+  %3 = mark_uninitialized [delegatingself] %2 : ${ var Product.CodingKeys } // users: %102, %106, %4
+  %4 = project_box %3 : ${ var Product.CodingKeys }, 0 // users: %98, %90, %60, %30
+  %5 = begin_borrow [lexical] %0 : $String        // users: %100, %67, %37, %7, %104, %6
+  debug_value %5 : $String, let, name "stringValue", argno 1, implicit // id: %6
+  %7 = copy_value %5 : $String                    // users: %27, %35, %8
+  %8 = begin_borrow [lexical] %7 : $String        // users: %26, %34, %18
+  %9 = string_literal utf8 "name"                 // user: %14
+  %10 = integer_literal $Builtin.Word, 4          // user: %14
+  %11 = integer_literal $Builtin.Int1, -1         // user: %14
+  %12 = metatype $@thin String.Type               // user: %14
+  // function_ref String.init(_builtinStringLiteral:utf8CodeUnitCount:isASCII:)
+  %13 = function_ref @$sSS21_builtinStringLiteral17utf8CodeUnitCount7isASCIISSBp_BwBi1_tcfC : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %14
+  %14 = apply %13(%9, %10, %11, %12) : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %16
+  %15 = alloc_stack $String                       // users: %23, %22, %20, %16
+  store %14 to [init] %15 : $*String              // id: %16
+  %17 = alloc_stack $String                       // users: %21, %20, %18
+  %18 = store_borrow %8 to %17 : $*String
+  // function_ref ~= infix<A>(_:_:)
+  %19 = function_ref @$ss2teoiySbx_xtSQRzlF : $@convention(thin) <τ_0_0 where τ_0_0 : Equatable> (@in_guaranteed τ_0_0, @in_guaranteed τ_0_0) -> Bool // user: %20
+  %20 = apply %19<String>(%15, %17) : $@convention(thin) <τ_0_0 where τ_0_0 : Equatable> (@in_guaranteed τ_0_0, @in_guaranteed τ_0_0) -> Bool // user: %24
+  dealloc_stack %17 : $*String                    // id: %21
+  destroy_addr %15 : $*String                     // id: %22
+  dealloc_stack %15 : $*String                    // id: %23
+  %24 = struct_extract %20 : $Bool, #Bool._value  // user: %25
+  cond_br %24, bb1, bb2                           // id: %25
+
+bb1:                                              // Preds: bb0
+  end_borrow %8 : $String                         // id: %26
+  destroy_value %7 : $String                      // id: %27
+  %28 = metatype $@thin Product.CodingKeys.Type
+  %29 = enum $Product.CodingKeys, #Product.CodingKeys.name!enumelt // user: %31
+  %30 = begin_access [modify] [unknown] %4 : $*Product.CodingKeys // users: %32, %31
+  assign %29 to %30 : $*Product.CodingKeys        // id: %31
+  end_access %30 : $*Product.CodingKeys           // id: %32
+  br bb10                                         // id: %33
+
+bb2:                                              // Preds: bb0
+  end_borrow %8 : $String                         // id: %34
+  destroy_value %7 : $String                      // id: %35
+  br bb3                                          // id: %36
+
+bb3:                                              // Preds: bb2
+  %37 = copy_value %5 : $String                   // users: %57, %65, %38
+  %38 = begin_borrow [lexical] %37 : $String      // users: %56, %64, %48
+  %39 = string_literal utf8 "age"                 // user: %44
+  %40 = integer_literal $Builtin.Word, 3          // user: %44
+  %41 = integer_literal $Builtin.Int1, -1         // user: %44
+  %42 = metatype $@thin String.Type               // user: %44
+  // function_ref String.init(_builtinStringLiteral:utf8CodeUnitCount:isASCII:)
+  %43 = function_ref @$sSS21_builtinStringLiteral17utf8CodeUnitCount7isASCIISSBp_BwBi1_tcfC : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %44
+  %44 = apply %43(%39, %40, %41, %42) : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %46
+  %45 = alloc_stack $String                       // users: %53, %52, %50, %46
+  store %44 to [init] %45 : $*String              // id: %46
+  %47 = alloc_stack $String                       // users: %51, %50, %48
+  %48 = store_borrow %38 to %47 : $*String
+  // function_ref ~= infix<A>(_:_:)
+  %49 = function_ref @$ss2teoiySbx_xtSQRzlF : $@convention(thin) <τ_0_0 where τ_0_0 : Equatable> (@in_guaranteed τ_0_0, @in_guaranteed τ_0_0) -> Bool // user: %50
+  %50 = apply %49<String>(%45, %47) : $@convention(thin) <τ_0_0 where τ_0_0 : Equatable> (@in_guaranteed τ_0_0, @in_guaranteed τ_0_0) -> Bool // user: %54
+  dealloc_stack %47 : $*String                    // id: %51
+  destroy_addr %45 : $*String                     // id: %52
+  dealloc_stack %45 : $*String                    // id: %53
+  %54 = struct_extract %50 : $Bool, #Bool._value  // user: %55
+  cond_br %54, bb4, bb5                           // id: %55
+
+bb4:                                              // Preds: bb3
+  end_borrow %38 : $String                        // id: %56
+  destroy_value %37 : $String                     // id: %57
+  %58 = metatype $@thin Product.CodingKeys.Type
+  %59 = enum $Product.CodingKeys, #Product.CodingKeys.age!enumelt // user: %61
+  %60 = begin_access [modify] [unknown] %4 : $*Product.CodingKeys // users: %62, %61
+  assign %59 to %60 : $*Product.CodingKeys        // id: %61
+  end_access %60 : $*Product.CodingKeys           // id: %62
+  br bb10                                         // id: %63
+
+bb5:                                              // Preds: bb3
+  end_borrow %38 : $String                        // id: %64
+  destroy_value %37 : $String                     // id: %65
+  br bb6                                          // id: %66
+
+bb6:                                              // Preds: bb5
+  %67 = copy_value %5 : $String                   // users: %87, %95, %68
+  %68 = begin_borrow [lexical] %67 : $String      // users: %86, %94, %78
+  %69 = string_literal utf8 "description"         // user: %74
+  %70 = integer_literal $Builtin.Word, 11         // user: %74
+  %71 = integer_literal $Builtin.Int1, -1         // user: %74
+  %72 = metatype $@thin String.Type               // user: %74
+  // function_ref String.init(_builtinStringLiteral:utf8CodeUnitCount:isASCII:)
+  %73 = function_ref @$sSS21_builtinStringLiteral17utf8CodeUnitCount7isASCIISSBp_BwBi1_tcfC : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %74
+  %74 = apply %73(%69, %70, %71, %72) : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %76
+  %75 = alloc_stack $String                       // users: %83, %82, %80, %76
+  store %74 to [init] %75 : $*String              // id: %76
+  %77 = alloc_stack $String                       // users: %81, %80, %78
+  %78 = store_borrow %68 to %77 : $*String
+  // function_ref ~= infix<A>(_:_:)
+  %79 = function_ref @$ss2teoiySbx_xtSQRzlF : $@convention(thin) <τ_0_0 where τ_0_0 : Equatable> (@in_guaranteed τ_0_0, @in_guaranteed τ_0_0) -> Bool // user: %80
+  %80 = apply %79<String>(%75, %77) : $@convention(thin) <τ_0_0 where τ_0_0 : Equatable> (@in_guaranteed τ_0_0, @in_guaranteed τ_0_0) -> Bool // user: %84
+  dealloc_stack %77 : $*String                    // id: %81
+  destroy_addr %75 : $*String                     // id: %82
+  dealloc_stack %75 : $*String                    // id: %83
+  %84 = struct_extract %80 : $Bool, #Bool._value  // user: %85
+  cond_br %84, bb7, bb8                           // id: %85
+
+bb7:                                              // Preds: bb6
+  end_borrow %68 : $String                        // id: %86
+  destroy_value %67 : $String                     // id: %87
+  %88 = metatype $@thin Product.CodingKeys.Type
+  %89 = enum $Product.CodingKeys, #Product.CodingKeys.description!enumelt // user: %91
+  %90 = begin_access [modify] [unknown] %4 : $*Product.CodingKeys // users: %92, %91
+  assign %89 to %90 : $*Product.CodingKeys        // id: %91
+  end_access %90 : $*Product.CodingKeys           // id: %92
+  br bb10                                         // id: %93
+
+bb8:                                              // Preds: bb6
+  end_borrow %68 : $String                        // id: %94
+  destroy_value %67 : $String                     // id: %95
+  br bb9                                          // id: %96
+
+bb9:                                              // Preds: bb8
+  br bb11                                         // id: %97
+
+bb10:                                             // Preds: bb7 bb4 bb1
+  %98 = load [trivial] %4 : $*Product.CodingKeys  // user: %99
+  %99 = enum $Optional<Product.CodingKeys>, #Optional.some!enumelt, %98 : $Product.CodingKeys // user: %103
+  end_borrow %5 : $String                         // id: %100
+  destroy_value %0 : $String                      // id: %101
+  destroy_value %3 : ${ var Product.CodingKeys }  // id: %102
+  br bb12(%99 : $Optional<Product.CodingKeys>)    // id: %103
+
+bb11:                                             // Preds: bb9
+  end_borrow %5 : $String                         // id: %104
+  destroy_value %0 : $String                      // id: %105
+  destroy_value %3 : ${ var Product.CodingKeys }  // id: %106
+  %107 = enum $Optional<Product.CodingKeys>, #Optional.none!enumelt // user: %108
+  br bb12(%107 : $Optional<Product.CodingKeys>)   // id: %108
+
+// %109                                           // user: %110
+bb12(%109 : $Optional<Product.CodingKeys>):       // Preds: bb10 bb11
+  return %109 : $Optional<Product.CodingKeys>     // id: %110
+} // end sil function '$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLO11stringValueAFSgSS_tcfC'
+
+// Product.CodingKeys.init(intValue:)
+sil private [ossa] @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLO8intValueAFSgSi_tcfC : $@convention(method) (Int, @thin Product.CodingKeys.Type) -> Optional<Product.CodingKeys> {
+// %0 "intValue"                                  // user: %5
+// %1 "$metatype"
+bb0(%0 : $Int, %1 : $@thin Product.CodingKeys.Type):
+  %2 = alloc_box ${ var Product.CodingKeys }, let, name "self" // user: %3
+  %3 = mark_uninitialized [delegatingself] %2 : ${ var Product.CodingKeys } // users: %7, %4
+  %4 = project_box %3 : ${ var Product.CodingKeys }, 0
+  debug_value %0 : $Int, let, name "intValue", argno 1, implicit // id: %5
+  br bb1                                          // id: %6
+
+bb1:                                              // Preds: bb0
+  destroy_value %3 : ${ var Product.CodingKeys }  // id: %7
+  %8 = enum $Optional<Product.CodingKeys>, #Optional.none!enumelt // user: %9
+  br bb2(%8 : $Optional<Product.CodingKeys>)      // id: %9
+
+// %10                                            // user: %11
+bb2(%10 : $Optional<Product.CodingKeys>):         // Preds: bb1
+  return %10 : $Optional<Product.CodingKeys>      // id: %11
+} // end sil function '$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLO8intValueAFSgSi_tcfC'
+
+// Product.CodingKeys.hashValue.getter
+sil private [ossa] @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLO9hashValueSivg : $@convention(method) (Product.CodingKeys) -> Int {
+// %0 "self"                                      // users: %3, %1
+bb0(%0 : $Product.CodingKeys):
+  debug_value %0 : $Product.CodingKeys, let, name "self", argno 1, implicit // id: %1
+  %2 = alloc_stack $Product.CodingKeys            // users: %6, %5, %3
+  store %0 to [trivial] %2 : $*Product.CodingKeys // id: %3
+  // function_ref _hashValue<A>(for:)
+  %4 = function_ref @$ss10_hashValue3forSix_tSHRzlF : $@convention(thin) <τ_0_0 where τ_0_0 : Hashable> (@in_guaranteed τ_0_0) -> Int // user: %5
+  %5 = apply %4<Product.CodingKeys>(%2) : $@convention(thin) <τ_0_0 where τ_0_0 : Hashable> (@in_guaranteed τ_0_0) -> Int // user: %7
+  dealloc_stack %2 : $*Product.CodingKeys         // id: %6
+  return %5 : $Int                                // id: %7
+} // end sil function '$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLO9hashValueSivg'
+
+// Product.CodingKeys.intValue.getter
+sil private [ossa] @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLO8intValueSiSgvg : $@convention(method) (Product.CodingKeys) -> Optional<Int> {
+// %0 "self"                                      // user: %1
+bb0(%0 : $Product.CodingKeys):
+  debug_value %0 : $Product.CodingKeys, let, name "self", argno 1, implicit // id: %1
+  %2 = enum $Optional<Int>, #Optional.none!enumelt // user: %3
+  return %2 : $Optional<Int>                      // id: %3
+} // end sil function '$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLO8intValueSiSgvg'
+
+// Product.CodingKeys.stringValue.getter
+sil private [ossa] @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLO11stringValueSSvg : $@convention(method) (Product.CodingKeys) -> @owned String {
+// %0 "self"                                      // users: %2, %1
+bb0(%0 : $Product.CodingKeys):
+  debug_value %0 : $Product.CodingKeys, let, name "self", argno 1, implicit // id: %1
+  switch_enum %0 : $Product.CodingKeys, case #Product.CodingKeys.name!enumelt: bb1, case #Product.CodingKeys.age!enumelt: bb2, case #Product.CodingKeys.description!enumelt: bb3 // id: %2
+
+bb1:                                              // Preds: bb0
+  %3 = string_literal utf8 "name"                 // user: %8
+  %4 = integer_literal $Builtin.Word, 4           // user: %8
+  %5 = integer_literal $Builtin.Int1, -1          // user: %8
+  %6 = metatype $@thin String.Type                // user: %8
+  // function_ref String.init(_builtinStringLiteral:utf8CodeUnitCount:isASCII:)
+  %7 = function_ref @$sSS21_builtinStringLiteral17utf8CodeUnitCount7isASCIISSBp_BwBi1_tcfC : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %8
+  %8 = apply %7(%3, %4, %5, %6) : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %9
+  br bb4(%8 : $String)                            // id: %9
+
+bb2:                                              // Preds: bb0
+  %10 = string_literal utf8 "age"                 // user: %15
+  %11 = integer_literal $Builtin.Word, 3          // user: %15
+  %12 = integer_literal $Builtin.Int1, -1         // user: %15
+  %13 = metatype $@thin String.Type               // user: %15
+  // function_ref String.init(_builtinStringLiteral:utf8CodeUnitCount:isASCII:)
+  %14 = function_ref @$sSS21_builtinStringLiteral17utf8CodeUnitCount7isASCIISSBp_BwBi1_tcfC : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %15
+  %15 = apply %14(%10, %11, %12, %13) : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %16
+  br bb4(%15 : $String)                           // id: %16
+
+bb3:                                              // Preds: bb0
+  %17 = string_literal utf8 "description"         // user: %22
+  %18 = integer_literal $Builtin.Word, 11         // user: %22
+  %19 = integer_literal $Builtin.Int1, -1         // user: %22
+  %20 = metatype $@thin String.Type               // user: %22
+  // function_ref String.init(_builtinStringLiteral:utf8CodeUnitCount:isASCII:)
+  %21 = function_ref @$sSS21_builtinStringLiteral17utf8CodeUnitCount7isASCIISSBp_BwBi1_tcfC : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %22
+  %22 = apply %21(%17, %18, %19, %20) : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %23
+  br bb4(%22 : $String)                           // id: %23
+
+// %24                                            // user: %25
+bb4(%24 : @owned $String):                        // Preds: bb3 bb2 bb1
+  return %24 : $String                            // id: %25
+} // end sil function '$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLO11stringValueSSvg'
+
+// protocol witness for static Equatable.== infix(_:_:) in conformance Product.CodingKeys
+sil private [transparent] [thunk] [ossa] @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOSQAASQ2eeoiySbx_xtFZTW : $@convention(witness_method: Equatable) (@in_guaranteed Product.CodingKeys, @in_guaranteed Product.CodingKeys, @thick Product.CodingKeys.Type) -> Bool {
+// %0                                             // user: %3
+// %1                                             // user: %4
+bb0(%0 : $*Product.CodingKeys, %1 : $*Product.CodingKeys, %2 : $@thick Product.CodingKeys.Type):
+  %3 = load [trivial] %0 : $*Product.CodingKeys   // user: %7
+  %4 = load [trivial] %1 : $*Product.CodingKeys   // user: %7
+  %5 = metatype $@thin Product.CodingKeys.Type    // user: %7
+  // function_ref static Product.CodingKeys.__derived_enum_equals(_:_:)
+  %6 = function_ref @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLO21__derived_enum_equalsySbAF_AFtFZ : $@convention(method) (Product.CodingKeys, Product.CodingKeys, @thin Product.CodingKeys.Type) -> Bool // user: %7
+  %7 = apply %6(%3, %4, %5) : $@convention(method) (Product.CodingKeys, Product.CodingKeys, @thin Product.CodingKeys.Type) -> Bool // user: %8
+  return %7 : $Bool                               // id: %8
+} // end sil function '$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOSQAASQ2eeoiySbx_xtFZTW'
+
+// protocol witness for Hashable.hashValue.getter in conformance Product.CodingKeys
+sil private [transparent] [thunk] [ossa] @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOSHAASH9hashValueSivgTW : $@convention(witness_method: Hashable) (@in_guaranteed Product.CodingKeys) -> Int {
+// %0                                             // user: %1
+bb0(%0 : $*Product.CodingKeys):
+  %1 = load [trivial] %0 : $*Product.CodingKeys   // user: %3
+  // function_ref Product.CodingKeys.hashValue.getter
+  %2 = function_ref @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLO9hashValueSivg : $@convention(method) (Product.CodingKeys) -> Int // user: %3
+  %3 = apply %2(%1) : $@convention(method) (Product.CodingKeys) -> Int // user: %4
+  return %3 : $Int                                // id: %4
+} // end sil function '$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOSHAASH9hashValueSivgTW'
+
+// protocol witness for Hashable.hash(into:) in conformance Product.CodingKeys
+sil private [transparent] [thunk] [ossa] @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOSHAASH4hash4intoys6HasherVz_tFTW : $@convention(witness_method: Hashable) (@inout Hasher, @in_guaranteed Product.CodingKeys) -> () {
+// %0                                             // user: %4
+// %1                                             // user: %2
+bb0(%0 : $*Hasher, %1 : $*Product.CodingKeys):
+  %2 = load [trivial] %1 : $*Product.CodingKeys   // user: %4
+  // function_ref Product.CodingKeys.hash(into:)
+  %3 = function_ref @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLO4hash4intoys6HasherVz_tF : $@convention(method) (@inout Hasher, Product.CodingKeys) -> () // user: %4
+  %4 = apply %3(%0, %2) : $@convention(method) (@inout Hasher, Product.CodingKeys) -> ()
+  %5 = tuple ()                                   // user: %6
+  return %5 : $()                                 // id: %6
+} // end sil function '$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOSHAASH4hash4intoys6HasherVz_tFTW'
+
+// protocol witness for Hashable._rawHashValue(seed:) in conformance Product.CodingKeys
+sil private [transparent] [thunk] [always_inline] [ossa] @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOSHAASH13_rawHashValue4seedS2i_tFTW : $@convention(witness_method: Hashable) (Int, @in_guaranteed Product.CodingKeys) -> Int {
+// %0                                             // user: %3
+// %1                                             // user: %3
+bb0(%0 : $Int, %1 : $*Product.CodingKeys):
+  // function_ref Hashable._rawHashValue(seed:)
+  %2 = function_ref @$sSHsE13_rawHashValue4seedS2i_tF : $@convention(method) <τ_0_0 where τ_0_0 : Hashable> (Int, @in_guaranteed τ_0_0) -> Int // user: %3
+  %3 = apply %2<Product.CodingKeys>(%0, %1) : $@convention(method) <τ_0_0 where τ_0_0 : Hashable> (Int, @in_guaranteed τ_0_0) -> Int // user: %4
+  return %3 : $Int                                // id: %4
+} // end sil function '$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOSHAASH13_rawHashValue4seedS2i_tFTW'
+
+// Hashable._rawHashValue(seed:)
+sil [serialized] [always_inline] @$sSHsE13_rawHashValue4seedS2i_tF : $@convention(method) <τ_0_0 where τ_0_0 : Hashable> (Int, @in_guaranteed τ_0_0) -> Int
+
+// protocol witness for CodingKey.stringValue.getter in conformance Product.CodingKeys
+sil private [transparent] [thunk] [ossa] @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOs0C3KeyAAsAGP11stringValueSSvgTW : $@convention(witness_method: CodingKey) (@in_guaranteed Product.CodingKeys) -> @owned String {
+// %0                                             // user: %1
+bb0(%0 : $*Product.CodingKeys):
+  %1 = load [trivial] %0 : $*Product.CodingKeys   // user: %3
+  // function_ref Product.CodingKeys.stringValue.getter
+  %2 = function_ref @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLO11stringValueSSvg : $@convention(method) (Product.CodingKeys) -> @owned String // user: %3
+  %3 = apply %2(%1) : $@convention(method) (Product.CodingKeys) -> @owned String // user: %4
+  return %3 : $String                             // id: %4
+} // end sil function '$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOs0C3KeyAAsAGP11stringValueSSvgTW'
+
+// protocol witness for CodingKey.init(stringValue:) in conformance Product.CodingKeys
+sil private [transparent] [thunk] [ossa] @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOs0C3KeyAAsAGP11stringValuexSgSS_tcfCTW : $@convention(witness_method: CodingKey) (@owned String, @thick Product.CodingKeys.Type) -> @out Optional<Product.CodingKeys> {
+// %0                                             // user: %6
+// %1                                             // user: %5
+bb0(%0 : $*Optional<Product.CodingKeys>, %1 : @owned $String, %2 : $@thick Product.CodingKeys.Type):
+  %3 = metatype $@thin Product.CodingKeys.Type    // user: %5
+  // function_ref Product.CodingKeys.init(stringValue:)
+  %4 = function_ref @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLO11stringValueAFSgSS_tcfC : $@convention(method) (@owned String, @thin Product.CodingKeys.Type) -> Optional<Product.CodingKeys> // user: %5
+  %5 = apply %4(%1, %3) : $@convention(method) (@owned String, @thin Product.CodingKeys.Type) -> Optional<Product.CodingKeys> // user: %6
+  store %5 to [trivial] %0 : $*Optional<Product.CodingKeys> // id: %6
+  %7 = tuple ()                                   // user: %8
+  return %7 : $()                                 // id: %8
+} // end sil function '$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOs0C3KeyAAsAGP11stringValuexSgSS_tcfCTW'
+
+// protocol witness for CodingKey.intValue.getter in conformance Product.CodingKeys
+sil private [transparent] [thunk] [ossa] @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOs0C3KeyAAsAGP8intValueSiSgvgTW : $@convention(witness_method: CodingKey) (@in_guaranteed Product.CodingKeys) -> Optional<Int> {
+// %0                                             // user: %1
+bb0(%0 : $*Product.CodingKeys):
+  %1 = load [trivial] %0 : $*Product.CodingKeys   // user: %3
+  // function_ref Product.CodingKeys.intValue.getter
+  %2 = function_ref @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLO8intValueSiSgvg : $@convention(method) (Product.CodingKeys) -> Optional<Int> // user: %3
+  %3 = apply %2(%1) : $@convention(method) (Product.CodingKeys) -> Optional<Int> // user: %4
+  return %3 : $Optional<Int>                      // id: %4
+} // end sil function '$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOs0C3KeyAAsAGP8intValueSiSgvgTW'
+
+// protocol witness for CodingKey.init(intValue:) in conformance Product.CodingKeys
+sil private [transparent] [thunk] [ossa] @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOs0C3KeyAAsAGP8intValuexSgSi_tcfCTW : $@convention(witness_method: CodingKey) (Int, @thick Product.CodingKeys.Type) -> @out Optional<Product.CodingKeys> {
+// %0                                             // user: %6
+// %1                                             // user: %5
+bb0(%0 : $*Optional<Product.CodingKeys>, %1 : $Int, %2 : $@thick Product.CodingKeys.Type):
+  %3 = metatype $@thin Product.CodingKeys.Type    // user: %5
+  // function_ref Product.CodingKeys.init(intValue:)
+  %4 = function_ref @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLO8intValueAFSgSi_tcfC : $@convention(method) (Int, @thin Product.CodingKeys.Type) -> Optional<Product.CodingKeys> // user: %5
+  %5 = apply %4(%1, %3) : $@convention(method) (Int, @thin Product.CodingKeys.Type) -> Optional<Product.CodingKeys> // user: %6
+  store %5 to [trivial] %0 : $*Optional<Product.CodingKeys> // id: %6
+  %7 = tuple ()                                   // user: %8
+  return %7 : $()                                 // id: %8
+} // end sil function '$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOs0C3KeyAAsAGP8intValuexSgSi_tcfCTW'
+
+// protocol witness for CustomDebugStringConvertible.debugDescription.getter in conformance Product.CodingKeys
+sil private [transparent] [thunk] [ossa] @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOs28CustomDebugStringConvertibleAAsAGP16debugDescriptionSSvgTW : $@convention(witness_method: CustomDebugStringConvertible) (@in_guaranteed Product.CodingKeys) -> @owned String {
+// %0                                             // user: %2
+bb0(%0 : $*Product.CodingKeys):
+  // function_ref CodingKey.debugDescription.getter
+  %1 = function_ref @$ss9CodingKeyPsE16debugDescriptionSSvg : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (@in_guaranteed τ_0_0) -> @owned String // user: %2
+  %2 = apply %1<Product.CodingKeys>(%0) : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (@in_guaranteed τ_0_0) -> @owned String // user: %3
+  return %2 : $String                             // id: %3
+} // end sil function '$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOs28CustomDebugStringConvertibleAAsAGP16debugDescriptionSSvgTW'
+
+// CodingKey.debugDescription.getter
+sil @$ss9CodingKeyPsE16debugDescriptionSSvg : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (@in_guaranteed τ_0_0) -> @owned String
+
+// protocol witness for CustomStringConvertible.description.getter in conformance Product.CodingKeys
+sil private [transparent] [thunk] [ossa] @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOs23CustomStringConvertibleAAsAGP11descriptionSSvgTW : $@convention(witness_method: CustomStringConvertible) (@in_guaranteed Product.CodingKeys) -> @owned String {
+// %0                                             // user: %2
+bb0(%0 : $*Product.CodingKeys):
+  // function_ref CodingKey.description.getter
+  %1 = function_ref @$ss9CodingKeyPsE11descriptionSSvg : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (@in_guaranteed τ_0_0) -> @owned String // user: %2
+  %2 = apply %1<Product.CodingKeys>(%0) : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (@in_guaranteed τ_0_0) -> @owned String // user: %3
+  return %2 : $String                             // id: %3
+} // end sil function '$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOs23CustomStringConvertibleAAsAGP11descriptionSSvgTW'
+
+// CodingKey.description.getter
+sil @$ss9CodingKeyPsE11descriptionSSvg : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (@in_guaranteed τ_0_0) -> @owned String
+
+// Product.encode(to:)
+sil hidden [ossa] @$s4main7ProductV6encode2toys7Encoder_p_tKF : $@convention(method) (@in_guaranteed Encoder, @guaranteed Product) -> @error Error {
+// %0 "encoder"                                   // users: %7, %2
+// %1 "self"                                      // users: %36, %25, %12, %3
+bb0(%0 : $*Encoder, %1 : @guaranteed $Product):
+  debug_value %0 : $*Encoder, let, name "encoder", argno 1, implicit, expr op_deref // id: %2
+  debug_value %1 : $Product, let, name "self", argno 2, implicit // id: %3
+  debug_value undef : $Error, var, name "$error", argno 3 // id: %4
+  %5 = alloc_box ${ var KeyedEncodingContainer<Product.CodingKeys> }, var, name "container" // users: %49, %67, %61, %56, %6
+  %6 = project_box %5 : ${ var KeyedEncodingContainer<Product.CodingKeys> }, 0 // users: %42, %30, %18, %11
+  %7 = open_existential_addr immutable_access %0 : $*Encoder to $*@opened("1F252D7C-5FE6-11ED-B61E-86E79974171B") Encoder // users: %11, %11, %10
+  %8 = metatype $@thin Product.CodingKeys.Type
+  %9 = metatype $@thick Product.CodingKeys.Type   // user: %11
+  %10 = witness_method $@opened("1F252D7C-5FE6-11ED-B61E-86E79974171B") Encoder, #Encoder.container : <Self where Self : Encoder><Key where Key : CodingKey> (Self) -> (Key.Type) -> KeyedEncodingContainer<Key>, %7 : $*@opened("1F252D7C-5FE6-11ED-B61E-86E79974171B") Encoder : $@convention(witness_method: Encoder) <τ_0_0 where τ_0_0 : Encoder><τ_1_0 where τ_1_0 : CodingKey> (@thick τ_1_0.Type, @in_guaranteed τ_0_0) -> @out KeyedEncodingContainer<τ_1_0> // type-defs: %7; user: %11
+  %11 = apply %10<@opened("1F252D7C-5FE6-11ED-B61E-86E79974171B") Encoder, Product.CodingKeys>(%6, %9, %7) : $@convention(witness_method: Encoder) <τ_0_0 where τ_0_0 : Encoder><τ_1_0 where τ_1_0 : CodingKey> (@thick τ_1_0.Type, @in_guaranteed τ_0_0) -> @out KeyedEncodingContainer<τ_1_0> // type-defs: %7
+  %12 = struct_extract %1 : $Product, #Product.name // user: %13
+  %13 = copy_value %12 : $String                  // users: %24, %20, %55
+  %14 = metatype $@thin Product.CodingKeys.Type
+  %15 = enum $Product.CodingKeys, #Product.CodingKeys.name!enumelt // user: %17
+  %16 = alloc_stack $Product.CodingKeys           // users: %23, %20, %54, %17
+  store %15 to [trivial] %16 : $*Product.CodingKeys // id: %17
+  %18 = begin_access [modify] [unknown] %6 : $*KeyedEncodingContainer<Product.CodingKeys> // users: %22, %20, %53
+  // function_ref KeyedEncodingContainer.encode(_:forKey:)
+  %19 = function_ref @$ss22KeyedEncodingContainerV6encode_6forKeyySS_xtKF : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (@guaranteed String, @in_guaranteed τ_0_0, @inout KeyedEncodingContainer<τ_0_0>) -> @error Error // user: %20
+  try_apply %19<Product.CodingKeys>(%13, %16, %18) : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (@guaranteed String, @in_guaranteed τ_0_0, @inout KeyedEncodingContainer<τ_0_0>) -> @error Error, normal bb1, error bb4 // id: %20
+
+bb1(%21 : $()):                                   // Preds: bb0
+  end_access %18 : $*KeyedEncodingContainer<Product.CodingKeys> // id: %22
+  dealloc_stack %16 : $*Product.CodingKeys        // id: %23
+  destroy_value %13 : $String                     // id: %24
+  %25 = struct_extract %1 : $Product, #Product.age // user: %32
+  %26 = metatype $@thin Product.CodingKeys.Type
+  %27 = enum $Product.CodingKeys, #Product.CodingKeys.age!enumelt // user: %29
+  %28 = alloc_stack $Product.CodingKeys           // users: %35, %32, %60, %29
+  store %27 to [trivial] %28 : $*Product.CodingKeys // id: %29
+  %30 = begin_access [modify] [unknown] %6 : $*KeyedEncodingContainer<Product.CodingKeys> // users: %34, %32, %59
+  // function_ref KeyedEncodingContainer.encode(_:forKey:)
+  %31 = function_ref @$ss22KeyedEncodingContainerV6encode_6forKeyySi_xtKF : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (Int, @in_guaranteed τ_0_0, @inout KeyedEncodingContainer<τ_0_0>) -> @error Error // user: %32
+  try_apply %31<Product.CodingKeys>(%25, %28, %30) : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (Int, @in_guaranteed τ_0_0, @inout KeyedEncodingContainer<τ_0_0>) -> @error Error, normal bb2, error bb5 // id: %32
+
+bb2(%33 : $()):                                   // Preds: bb1
+  end_access %30 : $*KeyedEncodingContainer<Product.CodingKeys> // id: %34
+  dealloc_stack %28 : $*Product.CodingKeys        // id: %35
+  %36 = struct_extract %1 : $Product, #Product.description // user: %37
+  %37 = copy_value %36 : $Optional<String>        // users: %48, %44, %66
+  %38 = metatype $@thin Product.CodingKeys.Type
+  %39 = enum $Product.CodingKeys, #Product.CodingKeys.description!enumelt // user: %41
+  %40 = alloc_stack $Product.CodingKeys           // users: %47, %44, %65, %41
+  store %39 to [trivial] %40 : $*Product.CodingKeys // id: %41
+  %42 = begin_access [modify] [unknown] %6 : $*KeyedEncodingContainer<Product.CodingKeys> // users: %46, %44, %64
+  // function_ref KeyedEncodingContainer.encodeIfPresent(_:forKey:)
+  %43 = function_ref @$ss22KeyedEncodingContainerV15encodeIfPresent_6forKeyySSSg_xtKF : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (@guaranteed Optional<String>, @in_guaranteed τ_0_0, @inout KeyedEncodingContainer<τ_0_0>) -> @error Error // user: %44
+  try_apply %43<Product.CodingKeys>(%37, %40, %42) : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (@guaranteed Optional<String>, @in_guaranteed τ_0_0, @inout KeyedEncodingContainer<τ_0_0>) -> @error Error, normal bb3, error bb6 // id: %44
+
+bb3(%45 : $()):                                   // Preds: bb2
+  end_access %42 : $*KeyedEncodingContainer<Product.CodingKeys> // id: %46
+  dealloc_stack %40 : $*Product.CodingKeys        // id: %47
+  destroy_value %37 : $Optional<String>           // id: %48
+  destroy_value %5 : ${ var KeyedEncodingContainer<Product.CodingKeys> } // id: %49
+  %50 = tuple ()                                  // user: %51
+  return %50 : $()                                // id: %51
+
+// %52                                            // user: %57
+bb4(%52 : @owned $Error):                         // Preds: bb0
+  end_access %18 : $*KeyedEncodingContainer<Product.CodingKeys> // id: %53
+  dealloc_stack %16 : $*Product.CodingKeys        // id: %54
+  destroy_value %13 : $String                     // id: %55
+  destroy_value %5 : ${ var KeyedEncodingContainer<Product.CodingKeys> } // id: %56
+  br bb7(%52 : $Error)                            // id: %57
+
+// %58                                            // user: %62
+bb5(%58 : @owned $Error):                         // Preds: bb1
+  end_access %30 : $*KeyedEncodingContainer<Product.CodingKeys> // id: %59
+  dealloc_stack %28 : $*Product.CodingKeys        // id: %60
+  destroy_value %5 : ${ var KeyedEncodingContainer<Product.CodingKeys> } // id: %61
+  br bb7(%58 : $Error)                            // id: %62
+
+// %63                                            // user: %68
+bb6(%63 : @owned $Error):                         // Preds: bb2
+  end_access %42 : $*KeyedEncodingContainer<Product.CodingKeys> // id: %64
+  dealloc_stack %40 : $*Product.CodingKeys        // id: %65
+  destroy_value %37 : $Optional<String>           // id: %66
+  destroy_value %5 : ${ var KeyedEncodingContainer<Product.CodingKeys> } // id: %67
+  br bb7(%63 : $Error)                            // id: %68
+
+// %69                                            // user: %70
+bb7(%69 : @owned $Error):                         // Preds: bb6 bb5 bb4
+  throw %69 : $Error                              // id: %70
+} // end sil function '$s4main7ProductV6encode2toys7Encoder_p_tKF'
+
+// KeyedEncodingContainer.encode(_:forKey:)
+sil @$ss22KeyedEncodingContainerV6encode_6forKeyySS_xtKF : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (@guaranteed String, @in_guaranteed τ_0_0, @inout KeyedEncodingContainer<τ_0_0>) -> @error Error
+
+// KeyedEncodingContainer.encode(_:forKey:)
+sil @$ss22KeyedEncodingContainerV6encode_6forKeyySi_xtKF : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (Int, @in_guaranteed τ_0_0, @inout KeyedEncodingContainer<τ_0_0>) -> @error Error
+
+// KeyedEncodingContainer.encodeIfPresent(_:forKey:)
+sil @$ss22KeyedEncodingContainerV15encodeIfPresent_6forKeyySSSg_xtKF : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (@guaranteed Optional<String>, @in_guaranteed τ_0_0, @inout KeyedEncodingContainer<τ_0_0>) -> @error Error
+
+// Product.init(from:)
+sil hidden [ossa] @$s4main7ProductV4fromACs7Decoder_p_tKcfC : $@convention(method) (@in Decoder, @thin Product.Type) -> (@owned Product, @error Error) {
+// %0 "decoder"                                   // users: %82, %60, %12, %5
+// %1 "$metatype"
+bb0(%0 : $*Decoder, %1 : $@thin Product.Type):
+  %2 = alloc_box ${ var Product }, var, name "self" // user: %3
+  %3 = mark_uninitialized [rootself] %2 : ${ var Product } // users: %83, %61, %4
+  %4 = project_box %3 : ${ var Product }, 0       // users: %59, %53, %40, %27, %7
+  debug_value %0 : $*Decoder, let, name "decoder", argno 1, implicit, expr op_deref // id: %5
+  debug_value undef : $Error, var, name "$error", argno 2 // id: %6
+  %7 = struct_element_addr %4 : $*Product, #Product.description // user: %10
+  // function_ref variable initialization expression of Product.description
+  %8 = function_ref @$s4main7ProductV11descriptionSSSgvpfi : $@convention(thin) () -> @owned Optional<String> // user: %9
+  %9 = apply %8() : $@convention(thin) () -> @owned Optional<String> // user: %10
+  store %9 to [init] %7 : $*Optional<String>      // id: %10
+  %11 = alloc_stack [lexical] $KeyedDecodingContainer<Product.CodingKeys>, let, name "container", implicit // users: %58, %57, %50, %79, %78, %37, %74, %73, %24, %69, %68, %16, %64
+  %12 = open_existential_addr immutable_access %0 : $*Decoder to $*@opened("1F24E7D6-5FE6-11ED-B61E-86E79974171B") Decoder // users: %16, %16, %15
+  %13 = metatype $@thin Product.CodingKeys.Type
+  %14 = metatype $@thick Product.CodingKeys.Type  // user: %16
+  %15 = witness_method $@opened("1F24E7D6-5FE6-11ED-B61E-86E79974171B") Decoder, #Decoder.container : <Self where Self : Decoder><Key where Key : CodingKey> (Self) -> (Key.Type) throws -> KeyedDecodingContainer<Key>, %12 : $*@opened("1F24E7D6-5FE6-11ED-B61E-86E79974171B") Decoder : $@convention(witness_method: Decoder) <τ_0_0 where τ_0_0 : Decoder><τ_1_0 where τ_1_0 : CodingKey> (@thick τ_1_0.Type, @in_guaranteed τ_0_0) -> (@out KeyedDecodingContainer<τ_1_0>, @error Error) // type-defs: %12; user: %16
+  try_apply %15<@opened("1F24E7D6-5FE6-11ED-B61E-86E79974171B") Decoder, Product.CodingKeys>(%11, %14, %12) : $@convention(witness_method: Decoder) <τ_0_0 where τ_0_0 : Decoder><τ_1_0 where τ_1_0 : CodingKey> (@thick τ_1_0.Type, @in_guaranteed τ_0_0) -> (@out KeyedDecodingContainer<τ_1_0>, @error Error), normal bb1, error bb5 // type-defs: %12; id: %16
+
+bb1(%17 : $()):                                   // Preds: bb0
+  %18 = metatype $@thin String.Type               // user: %24
+  %19 = metatype $@thin Product.CodingKeys.Type
+  %20 = enum $Product.CodingKeys, #Product.CodingKeys.name!enumelt // user: %22
+  %21 = alloc_stack $Product.CodingKeys           // users: %26, %24, %67, %22
+  store %20 to [trivial] %21 : $*Product.CodingKeys // id: %22
+  // function_ref KeyedDecodingContainer.decode(_:forKey:)
+  %23 = function_ref @$ss22KeyedDecodingContainerV6decode_6forKeyS2Sm_xtKF : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (@thin String.Type, @in_guaranteed τ_0_0, @in_guaranteed KeyedDecodingContainer<τ_0_0>) -> (@owned String, @error Error) // user: %24
+  try_apply %23<Product.CodingKeys>(%18, %21, %11) : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (@thin String.Type, @in_guaranteed τ_0_0, @in_guaranteed KeyedDecodingContainer<τ_0_0>) -> (@owned String, @error Error), normal bb2, error bb6 // id: %24
+
+// %25                                            // user: %29
+bb2(%25 : @owned $String):                        // Preds: bb1
+  dealloc_stack %21 : $*Product.CodingKeys        // id: %26
+  %27 = begin_access [modify] [unknown] %4 : $*Product // users: %30, %28
+  %28 = struct_element_addr %27 : $*Product, #Product.name // user: %29
+  assign %25 to %28 : $*String                    // id: %29
+  end_access %27 : $*Product                      // id: %30
+  %31 = metatype $@thin Int.Type                  // user: %37
+  %32 = metatype $@thin Product.CodingKeys.Type
+  %33 = enum $Product.CodingKeys, #Product.CodingKeys.age!enumelt // user: %35
+  %34 = alloc_stack $Product.CodingKeys           // users: %39, %37, %72, %35
+  store %33 to [trivial] %34 : $*Product.CodingKeys // id: %35
+  // function_ref KeyedDecodingContainer.decode(_:forKey:)
+  %36 = function_ref @$ss22KeyedDecodingContainerV6decode_6forKeyS2im_xtKF : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (@thin Int.Type, @in_guaranteed τ_0_0, @in_guaranteed KeyedDecodingContainer<τ_0_0>) -> (Int, @error Error) // user: %37
+  try_apply %36<Product.CodingKeys>(%31, %34, %11) : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (@thin Int.Type, @in_guaranteed τ_0_0, @in_guaranteed KeyedDecodingContainer<τ_0_0>) -> (Int, @error Error), normal bb3, error bb7 // id: %37
+
+// %38                                            // user: %42
+bb3(%38 : $Int):                                  // Preds: bb2
+  dealloc_stack %34 : $*Product.CodingKeys        // id: %39
+  %40 = begin_access [modify] [unknown] %4 : $*Product // users: %43, %41
+  %41 = struct_element_addr %40 : $*Product, #Product.age // user: %42
+  assign %38 to %41 : $*Int                       // id: %42
+  end_access %40 : $*Product                      // id: %43
+  %44 = metatype $@thin String.Type               // user: %50
+  %45 = metatype $@thin Product.CodingKeys.Type
+  %46 = enum $Product.CodingKeys, #Product.CodingKeys.description!enumelt // user: %48
+  %47 = alloc_stack $Product.CodingKeys           // users: %52, %50, %77, %48
+  store %46 to [trivial] %47 : $*Product.CodingKeys // id: %48
+  // function_ref KeyedDecodingContainer.decodeIfPresent(_:forKey:)
+  %49 = function_ref @$ss22KeyedDecodingContainerV15decodeIfPresent_6forKeySSSgSSm_xtKF : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (@thin String.Type, @in_guaranteed τ_0_0, @in_guaranteed KeyedDecodingContainer<τ_0_0>) -> (@owned Optional<String>, @error Error) // user: %50
+  try_apply %49<Product.CodingKeys>(%44, %47, %11) : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (@thin String.Type, @in_guaranteed τ_0_0, @in_guaranteed KeyedDecodingContainer<τ_0_0>) -> (@owned Optional<String>, @error Error), normal bb4, error bb8 // id: %50
+
+// %51                                            // user: %55
+bb4(%51 : @owned $Optional<String>):              // Preds: bb3
+  dealloc_stack %47 : $*Product.CodingKeys        // id: %52
+  %53 = begin_access [modify] [unknown] %4 : $*Product // users: %56, %54
+  %54 = struct_element_addr %53 : $*Product, #Product.description // user: %55
+  assign %51 to %54 : $*Optional<String>          // id: %55
+  end_access %53 : $*Product                      // id: %56
+  destroy_addr %11 : $*KeyedDecodingContainer<Product.CodingKeys> // id: %57
+  dealloc_stack %11 : $*KeyedDecodingContainer<Product.CodingKeys> // id: %58
+  %59 = load [copy] %4 : $*Product                // user: %62
+  destroy_addr %0 : $*Decoder                     // id: %60
+  destroy_value %3 : ${ var Product }             // id: %61
+  return %59 : $Product                           // id: %62
+
+// %63                                            // user: %65
+bb5(%63 : @owned $Error):                         // Preds: bb0
+  dealloc_stack %11 : $*KeyedDecodingContainer<Product.CodingKeys> // id: %64
+  br bb9(%63 : $Error)                            // id: %65
+
+// %66                                            // user: %70
+bb6(%66 : @owned $Error):                         // Preds: bb1
+  dealloc_stack %21 : $*Product.CodingKeys        // id: %67
+  destroy_addr %11 : $*KeyedDecodingContainer<Product.CodingKeys> // id: %68
+  dealloc_stack %11 : $*KeyedDecodingContainer<Product.CodingKeys> // id: %69
+  br bb9(%66 : $Error)                            // id: %70
+
+// %71                                            // user: %75
+bb7(%71 : @owned $Error):                         // Preds: bb2
+  dealloc_stack %34 : $*Product.CodingKeys        // id: %72
+  destroy_addr %11 : $*KeyedDecodingContainer<Product.CodingKeys> // id: %73
+  dealloc_stack %11 : $*KeyedDecodingContainer<Product.CodingKeys> // id: %74
+  br bb9(%71 : $Error)                            // id: %75
+
+// %76                                            // user: %80
+bb8(%76 : @owned $Error):                         // Preds: bb3
+  dealloc_stack %47 : $*Product.CodingKeys        // id: %77
+  destroy_addr %11 : $*KeyedDecodingContainer<Product.CodingKeys> // id: %78
+  dealloc_stack %11 : $*KeyedDecodingContainer<Product.CodingKeys> // id: %79
+  br bb9(%76 : $Error)                            // id: %80
+
+// %81                                            // user: %84
+bb9(%81 : @owned $Error):                         // Preds: bb8 bb7 bb6 bb5
+  destroy_addr %0 : $*Decoder                     // id: %82
+  destroy_value %3 : ${ var Product }             // id: %83
+  throw %81 : $Error                              // id: %84
+} // end sil function '$s4main7ProductV4fromACs7Decoder_p_tKcfC'
+
+// KeyedDecodingContainer.decode(_:forKey:)
+sil @$ss22KeyedDecodingContainerV6decode_6forKeyS2Sm_xtKF : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (@thin String.Type, @in_guaranteed τ_0_0, @in_guaranteed KeyedDecodingContainer<τ_0_0>) -> (@owned String, @error Error)
+
+// KeyedDecodingContainer.decode(_:forKey:)
+sil @$ss22KeyedDecodingContainerV6decode_6forKeyS2im_xtKF : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (@thin Int.Type, @in_guaranteed τ_0_0, @in_guaranteed KeyedDecodingContainer<τ_0_0>) -> (Int, @error Error)
+
+// KeyedDecodingContainer.decodeIfPresent(_:forKey:)
+sil @$ss22KeyedDecodingContainerV15decodeIfPresent_6forKeySSSgSSm_xtKF : $@convention(method) <τ_0_0 where τ_0_0 : CodingKey> (@thin String.Type, @in_guaranteed τ_0_0, @in_guaranteed KeyedDecodingContainer<τ_0_0>) -> (@owned Optional<String>, @error Error)
+
+// Product.init(name:age:description:)
+sil hidden [ossa] @$s4main7ProductV4name3age11descriptionACSS_SiSSSgtcfC : $@convention(method) (@owned String, Int, @owned Optional<String>, @thin Product.Type) -> @owned Product {
+// %0 "$implicit_value"                           // user: %4
+// %1 "$implicit_value"                           // user: %4
+// %2 "$implicit_value"                           // user: %4
+// %3 "$metatype"
+bb0(%0 : @owned $String, %1 : $Int, %2 : @owned $Optional<String>, %3 : $@thin Product.Type):
+  %4 = struct $Product (%0 : $String, %1 : $Int, %2 : $Optional<String>) // user: %5
+  return %4 : $Product                            // id: %5
+} // end sil function '$s4main7ProductV4name3age11descriptionACSS_SiSSSgtcfC'
+
+// protocol witness for Decodable.init(from:) in conformance Product
+sil private [transparent] [thunk] [ossa] @$s4main7ProductVSeAASe4fromxs7Decoder_p_tKcfCTW : $@convention(witness_method: Decodable) (@in Decoder, @thick Product.Type) -> (@out Product, @error Error) {
+// %0                                             // user: %7
+// %1                                             // user: %5
+bb0(%0 : $*Product, %1 : $*Decoder, %2 : $@thick Product.Type):
+  %3 = metatype $@thin Product.Type               // user: %5
+  // function_ref Product.init(from:)
+  %4 = function_ref @$s4main7ProductV4fromACs7Decoder_p_tKcfC : $@convention(method) (@in Decoder, @thin Product.Type) -> (@owned Product, @error Error) // user: %5
+  try_apply %4(%1, %3) : $@convention(method) (@in Decoder, @thin Product.Type) -> (@owned Product, @error Error), normal bb1, error bb2 // id: %5
+
+// %6                                             // user: %7
+bb1(%6 : @owned $Product):                        // Preds: bb0
+  store %6 to [init] %0 : $*Product               // id: %7
+  %8 = tuple ()                                   // user: %9
+  return %8 : $()                                 // id: %9
+
+// %10                                            // user: %11
+bb2(%10 : @owned $Error):                         // Preds: bb0
+  throw %10 : $Error                              // id: %11
+} // end sil function '$s4main7ProductVSeAASe4fromxs7Decoder_p_tKcfCTW'
+
+// protocol witness for Encodable.encode(to:) in conformance Product
+sil private [transparent] [thunk] [ossa] @$s4main7ProductVSEAASE6encode2toys7Encoder_p_tKFTW : $@convention(witness_method: Encodable) (@in_guaranteed Encoder, @in_guaranteed Product) -> @error Error {
+// %0                                             // user: %4
+// %1                                             // user: %2
+bb0(%0 : $*Encoder, %1 : $*Product):
+  %2 = load_borrow %1 : $*Product                 // users: %7, %10, %4
+  // function_ref Product.encode(to:)
+  %3 = function_ref @$s4main7ProductV6encode2toys7Encoder_p_tKF : $@convention(method) (@in_guaranteed Encoder, @guaranteed Product) -> @error Error // user: %4
+  try_apply %3(%0, %2) : $@convention(method) (@in_guaranteed Encoder, @guaranteed Product) -> @error Error, normal bb1, error bb2 // id: %4
+
+bb1(%5 : $()):                                    // Preds: bb0
+  %6 = tuple ()                                   // user: %8
+  end_borrow %2 : $Product                        // id: %7
+  return %6 : $()                                 // id: %8
+
+// %9                                             // user: %11
+bb2(%9 : @owned $Error):                          // Preds: bb0
+  end_borrow %2 : $Product                        // id: %10
+  throw %9 : $Error                               // id: %11
+} // end sil function '$s4main7ProductVSEAASE6encode2toys7Encoder_p_tKFTW'
+
+// Int.init(_builtinIntegerLiteral:)
+sil [transparent] [serialized] @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int
+
+// static Int.== infix(_:_:)
+sil [transparent] [serialized] @$sSi2eeoiySbSi_SitFZ : $@convention(method) (Int, Int, @thin Int.Type) -> Bool
+
+// _hashValue<A>(for:)
+sil [serialized] [always_inline] @$ss10_hashValue3forSix_tSHRzlF : $@convention(thin) <τ_0_0 where τ_0_0 : Hashable> (@in_guaranteed τ_0_0) -> Int
+
+// Hasher.combine<A>(_:)
+sil [serialized] [always_inline] @$ss6HasherV7combineyyxSHRzlF : $@convention(method) <τ_0_0 where τ_0_0 : Hashable> (@in_guaranteed τ_0_0, @inout Hasher) -> ()
+
+// String.init(_builtinStringLiteral:utf8CodeUnitCount:isASCII:)
+sil [serialized] [always_inline] [readonly] [_semantics "string.makeUTF8"] @$sSS21_builtinStringLiteral17utf8CodeUnitCount7isASCIISSBp_BwBi1_tcfC : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String
+
+// ~= infix<A>(_:_:)
+sil [transparent] [serialized] @$ss2teoiySbx_xtSQRzlF : $@convention(thin) <τ_0_0 where τ_0_0 : Equatable> (@in_guaranteed τ_0_0, @in_guaranteed τ_0_0) -> Bool
+
+sil_witness_table private Product.CodingKeys: Equatable module main {
+  method #Equatable."==": <Self where Self : Equatable> (Self.Type) -> (Self, Self) -> Bool : @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOSQAASQ2eeoiySbx_xtFZTW	// protocol witness for static Equatable.== infix(_:_:) in conformance Product.CodingKeys
+}
+
+sil_witness_table private Product.CodingKeys: Hashable module main {
+  base_protocol Equatable: Product.CodingKeys: Equatable module main
+  method #Hashable.hashValue!getter: <Self where Self : Hashable> (Self) -> () -> Int : @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOSHAASH9hashValueSivgTW	// protocol witness for Hashable.hashValue.getter in conformance Product.CodingKeys
+  method #Hashable.hash: <Self where Self : Hashable> (Self) -> (inout Hasher) -> () : @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOSHAASH4hash4intoys6HasherVz_tFTW	// protocol witness for Hashable.hash(into:) in conformance Product.CodingKeys
+  method #Hashable._rawHashValue: <Self where Self : Hashable> (Self) -> (Int) -> Int : @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOSHAASH13_rawHashValue4seedS2i_tFTW	// protocol witness for Hashable._rawHashValue(seed:) in conformance Product.CodingKeys
+}
+
+sil_witness_table private Product.CodingKeys: CodingKey module main {
+  base_protocol CustomDebugStringConvertible: Product.CodingKeys: CustomDebugStringConvertible module main
+  base_protocol CustomStringConvertible: Product.CodingKeys: CustomStringConvertible module main
+  method #CodingKey.stringValue!getter: <Self where Self : CodingKey> (Self) -> () -> String : @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOs0C3KeyAAsAGP11stringValueSSvgTW	// protocol witness for CodingKey.stringValue.getter in conformance Product.CodingKeys
+  method #CodingKey.init!allocator: <Self where Self : CodingKey> (Self.Type) -> (String) -> Self? : @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOs0C3KeyAAsAGP11stringValuexSgSS_tcfCTW	// protocol witness for CodingKey.init(stringValue:) in conformance Product.CodingKeys
+  method #CodingKey.intValue!getter: <Self where Self : CodingKey> (Self) -> () -> Int? : @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOs0C3KeyAAsAGP8intValueSiSgvgTW	// protocol witness for CodingKey.intValue.getter in conformance Product.CodingKeys
+  method #CodingKey.init!allocator: <Self where Self : CodingKey> (Self.Type) -> (Int) -> Self? : @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOs0C3KeyAAsAGP8intValuexSgSi_tcfCTW	// protocol witness for CodingKey.init(intValue:) in conformance Product.CodingKeys
+}
+
+sil_witness_table private Product.CodingKeys: CustomDebugStringConvertible module main {
+  method #CustomDebugStringConvertible.debugDescription!getter: <Self where Self : CustomDebugStringConvertible> (Self) -> () -> String : @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOs28CustomDebugStringConvertibleAAsAGP16debugDescriptionSSvgTW	// protocol witness for CustomDebugStringConvertible.debugDescription.getter in conformance Product.CodingKeys
+}
+
+sil_witness_table private Product.CodingKeys: CustomStringConvertible module main {
+  method #CustomStringConvertible.description!getter: <Self where Self : CustomStringConvertible> (Self) -> () -> String : @$s4main7ProductV10CodingKeys029_12232F587A4C5CD8B1EEDF696793F2FCLLOs23CustomStringConvertibleAAsAGP11descriptionSSvgTW	// protocol witness for CustomStringConvertible.description.getter in conformance Product.CodingKeys
+}
+
+sil_witness_table hidden Product: Decodable module main {
+  method #Decodable.init!allocator: <Self where Self : Decodable> (Self.Type) -> (Decoder) throws -> Self : @$s4main7ProductVSeAASe4fromxs7Decoder_p_tKcfCTW	// protocol witness for Decodable.init(from:) in conformance Product
+}
+
+sil_witness_table hidden Product: Encodable module main {
+  method #Encodable.encode: <Self where Self : Encodable> (Self) -> (Encoder) throws -> () : @$s4main7ProductVSEAASE6encode2toys7Encoder_p_tKFTW	// protocol witness for Encodable.encode(to:) in conformance Product
+}
+
+
+
+// Mappings from '#fileID' to '#filePath':
+//   'main/main.swift' => 'main.swift'
+
+
