@@ -1,4 +1,31 @@
-[toc]
+- [Swift底层原理-Codable](#swift底层原理-codable)
+  - [基本用法](#基本用法)
+    - [解码](#解码)
+    - [编码](#编码)
+  - [Codable](#codable)
+  - [Decoder](#decoder)
+    - [JSONDecoder](#jsondecoder)
+      - [Decode方法](#decode方法)
+    - [__JSONDecoder](#__jsondecoder)
+      - [Decoder](#decoder-1)
+      - [init](#init)
+      - [__JSONDecodingStorage](#__jsondecodingstorage)
+      - [unbox方法](#unbox方法)
+    - [继承Decodable协议的SIL分析](#继承decodable协议的sil分析)
+      - [KeyedDecodingContainer](#keyeddecodingcontainer)
+      - [Decoder协议的container方法](#decoder协议的container方法)
+      - [container的decode(_:forKey:)方法](#container的decode_forkey方法)
+        - [_JSONKeyedDecodingContainer](#_jsonkeyeddecodingcontainer)
+    - [解码容器](#解码容器)
+    - [解码流程总结](#解码流程总结)
+  - [Encoder](#encoder)
+    - [JSONEncoder](#jsonencoder)
+      - [Encode方法](#encode方法)
+    - [__JSONEncoder](#__jsonencoder)
+      - [Encoder](#encoder-1)
+      - [box方法](#box方法)
+  - [总结](#总结)
+
 
 # Swift底层原理-Codable
 
