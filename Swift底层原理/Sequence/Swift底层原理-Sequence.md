@@ -1,4 +1,12 @@
-[toc]
+- [Swift底层原理-Sequence与Collection](#swift底层原理-sequence与collection)
+  - [Sequence](#sequence)
+    - [for in本质](#for-in本质)
+    - [Sequence与IteratorProtocol](#sequence与iteratorprotocol)
+    - [自己定义一个遵循Sequence的结构体](#自己定义一个遵循sequence的结构体)
+  - [Collection](#collection)
+    - [mutableCollection](#mutablecollection)
+    - [RangeReplaceableCollection](#rangereplaceablecollection)
+
 
 # Swift底层原理-Sequence与Collection
 
