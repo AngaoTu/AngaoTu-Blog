@@ -1,0 +1,160 @@
+sil_stage raw
+
+import Builtin
+import Swift
+import SwiftShims
+
+import Foundation
+
+func makeIncrementer() -> () -> Int
+
+@_hasStorage @_hasInitialValue let fn: () -> Int { get }
+
+// fn
+sil_global hidden [let] @$s4main2fnSiycvp : $@callee_guaranteed () -> Int
+
+// main
+sil [ossa] @main : $@convention(c) (Int32, UnsafeMutablePointer<Optional<UnsafeMutablePointer<Int8>>>) -> Int32 {
+bb0(%0 : $Int32, %1 : $UnsafeMutablePointer<Optional<UnsafeMutablePointer<Int8>>>):
+  alloc_global @$s4main2fnSiycvp                  // id: %2
+  %3 = global_addr @$s4main2fnSiycvp : $*@callee_guaranteed () -> Int // users: %42, %18, %7, %6
+  // function_ref makeIncrementer()
+  %4 = function_ref @$s4main15makeIncrementerSiycyF : $@convention(thin) () -> @owned @callee_guaranteed () -> Int // user: %5
+  %5 = apply %4() : $@convention(thin) () -> @owned @callee_guaranteed () -> Int // user: %6
+  store %5 to [init] %3 : $*@callee_guaranteed () -> Int // id: %6
+  %7 = load [copy] %3 : $*@callee_guaranteed () -> Int // users: %11, %8
+  %8 = begin_borrow %7 : $@callee_guaranteed () -> Int // users: %10, %9
+  %9 = apply %8() : $@callee_guaranteed () -> Int
+  end_borrow %8 : $@callee_guaranteed () -> Int   // id: %10
+  destroy_value %7 : $@callee_guaranteed () -> Int // id: %11
+  %12 = integer_literal $Builtin.Word, 1          // user: %14
+  // function_ref _allocateUninitializedArray<A>(_:)
+  %13 = function_ref @$ss27_allocateUninitializedArrayySayxG_BptBwlF : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer) // user: %14
+  %14 = apply %13<Any>(%12) : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer) // user: %15
+  (%15, %16) = destructure_tuple %14 : $(Array<Any>, Builtin.RawPointer) // users: %25, %17
+  %17 = pointer_to_address %16 : $Builtin.RawPointer to [strict] $*Any // user: %22
+  %18 = load [copy] %3 : $*@callee_guaranteed () -> Int // users: %26, %19
+  %19 = begin_borrow %18 : $@callee_guaranteed () -> Int // users: %21, %20
+  %20 = apply %19() : $@callee_guaranteed () -> Int // user: %23
+  end_borrow %19 : $@callee_guaranteed () -> Int  // id: %21
+  %22 = init_existential_addr %17 : $*Any, $Int   // user: %23
+  store %20 to [trivial] %22 : $*Int              // id: %23
+  // function_ref _finalizeUninitializedArray<A>(_:)
+  %24 = function_ref @$ss27_finalizeUninitializedArrayySayxGABnlF : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0> // user: %25
+  %25 = apply %24<Any>(%15) : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0> // users: %35, %32
+  destroy_value %18 : $@callee_guaranteed () -> Int // id: %26
+  // function_ref default argument 1 of print(_:separator:terminator:)
+  %27 = function_ref @$ss5print_9separator10terminatoryypd_S2StFfA0_ : $@convention(thin) () -> @owned String // user: %28
+  %28 = apply %27() : $@convention(thin) () -> @owned String // users: %34, %32
+  // function_ref default argument 2 of print(_:separator:terminator:)
+  %29 = function_ref @$ss5print_9separator10terminatoryypd_S2StFfA1_ : $@convention(thin) () -> @owned String // user: %30
+  %30 = apply %29() : $@convention(thin) () -> @owned String // users: %33, %32
+  // function_ref print(_:separator:terminator:)
+  %31 = function_ref @$ss5print_9separator10terminatoryypd_S2StF : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> () // user: %32
+  %32 = apply %31(%25, %28, %30) : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> ()
+  destroy_value %30 : $String                     // id: %33
+  destroy_value %28 : $String                     // id: %34
+  destroy_value %25 : $Array<Any>                 // id: %35
+  %36 = integer_literal $Builtin.Word, 1          // user: %38
+  // function_ref _allocateUninitializedArray<A>(_:)
+  %37 = function_ref @$ss27_allocateUninitializedArrayySayxG_BptBwlF : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer) // user: %38
+  %38 = apply %37<Any>(%36) : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer) // user: %39
+  (%39, %40) = destructure_tuple %38 : $(Array<Any>, Builtin.RawPointer) // users: %49, %41
+  %41 = pointer_to_address %40 : $Builtin.RawPointer to [strict] $*Any // user: %46
+  %42 = load [copy] %3 : $*@callee_guaranteed () -> Int // users: %50, %43
+  %43 = begin_borrow %42 : $@callee_guaranteed () -> Int // users: %45, %44
+  %44 = apply %43() : $@callee_guaranteed () -> Int // user: %47
+  end_borrow %43 : $@callee_guaranteed () -> Int  // id: %45
+  %46 = init_existential_addr %41 : $*Any, $Int   // user: %47
+  store %44 to [trivial] %46 : $*Int              // id: %47
+  // function_ref _finalizeUninitializedArray<A>(_:)
+  %48 = function_ref @$ss27_finalizeUninitializedArrayySayxGABnlF : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0> // user: %49
+  %49 = apply %48<Any>(%39) : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0> // users: %59, %56
+  destroy_value %42 : $@callee_guaranteed () -> Int // id: %50
+  // function_ref default argument 1 of print(_:separator:terminator:)
+  %51 = function_ref @$ss5print_9separator10terminatoryypd_S2StFfA0_ : $@convention(thin) () -> @owned String // user: %52
+  %52 = apply %51() : $@convention(thin) () -> @owned String // users: %58, %56
+  // function_ref default argument 2 of print(_:separator:terminator:)
+  %53 = function_ref @$ss5print_9separator10terminatoryypd_S2StFfA1_ : $@convention(thin) () -> @owned String // user: %54
+  %54 = apply %53() : $@convention(thin) () -> @owned String // users: %57, %56
+  // function_ref print(_:separator:terminator:)
+  %55 = function_ref @$ss5print_9separator10terminatoryypd_S2StF : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> () // user: %56
+  %56 = apply %55(%49, %52, %54) : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> ()
+  destroy_value %54 : $String                     // id: %57
+  destroy_value %52 : $String                     // id: %58
+  destroy_value %49 : $Array<Any>                 // id: %59
+  %60 = integer_literal $Builtin.Int32, 0         // user: %61
+  %61 = struct $Int32 (%60 : $Builtin.Int32)      // user: %62
+  return %61 : $Int32                             // id: %62
+} // end sil function 'main'
+
+// makeIncrementer()
+sil hidden [ossa] @$s4main15makeIncrementerSiycyF : $@convention(thin) () -> @owned @callee_guaranteed () -> Int {
+bb0:
+  %0 = alloc_box ${ var Int }, var, name "runningTotal" // users: %11, %8, %1
+  %1 = project_box %0 : ${ var Int }, 0           // users: %9, %6
+  %2 = integer_literal $Builtin.IntLiteral, 10    // user: %5
+  %3 = metatype $@thin Int.Type                   // user: %5
+  // function_ref Int.init(_builtinIntegerLiteral:)
+  %4 = function_ref @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %5
+  %5 = apply %4(%2, %3) : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %6
+  store %5 to [trivial] %1 : $*Int                // id: %6
+  // function_ref incrementer #1 () in makeIncrementer()
+  %7 = function_ref @$s4main15makeIncrementerSiycyF11incrementerL_SiyF : $@convention(thin) (@guaranteed { var Int }) -> Int // user: %10
+  %8 = copy_value %0 : ${ var Int }               // user: %10
+  mark_function_escape %1 : $*Int                 // id: %9
+  %10 = partial_apply [callee_guaranteed] %7(%8) : $@convention(thin) (@guaranteed { var Int }) -> Int // user: %12
+  destroy_value %0 : ${ var Int }                 // id: %11
+  return %10 : $@callee_guaranteed () -> Int      // id: %12
+} // end sil function '$s4main15makeIncrementerSiycyF'
+
+// Int.init(_builtinIntegerLiteral:)
+sil [transparent] [serialized] @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int
+
+// incrementer #1 () in makeIncrementer()
+sil private [ossa] @$s4main15makeIncrementerSiycyF11incrementerL_SiyF : $@convention(thin) (@guaranteed { var Int }) -> Int {
+// %0 "runningTotal"                              // user: %1
+bb0(%0 : @guaranteed ${ var Int }):
+  %1 = project_box %0 : ${ var Int }, 0           // users: %12, %8, %2
+  debug_value %1 : $*Int, var, name "runningTotal", argno 1, expr op_deref // id: %2
+  %3 = metatype $@thin Int.Type                   // user: %10
+  %4 = integer_literal $Builtin.IntLiteral, 1     // user: %7
+  %5 = metatype $@thin Int.Type                   // user: %7
+  // function_ref Int.init(_builtinIntegerLiteral:)
+  %6 = function_ref @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %7
+  %7 = apply %6(%4, %5) : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %10
+  %8 = begin_access [modify] [unknown] %1 : $*Int // users: %11, %10
+  // function_ref static Int.+= infix(_:_:)
+  %9 = function_ref @$sSi2peoiyySiz_SitFZ : $@convention(method) (@inout Int, Int, @thin Int.Type) -> () // user: %10
+  %10 = apply %9(%8, %7, %3) : $@convention(method) (@inout Int, Int, @thin Int.Type) -> ()
+  end_access %8 : $*Int                           // id: %11
+  %12 = begin_access [read] [unknown] %1 : $*Int  // users: %14, %13
+  %13 = load [trivial] %12 : $*Int                // user: %15
+  end_access %12 : $*Int                          // id: %14
+  return %13 : $Int                               // id: %15
+} // end sil function '$s4main15makeIncrementerSiycyF11incrementerL_SiyF'
+
+// static Int.+= infix(_:_:)
+sil [transparent] [serialized] @$sSi2peoiyySiz_SitFZ : $@convention(method) (@inout Int, Int, @thin Int.Type) -> ()
+
+// _allocateUninitializedArray<A>(_:)
+sil [serialized] [always_inline] [_semantics "array.uninitialized_intrinsic"] @$ss27_allocateUninitializedArrayySayxG_BptBwlF : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer)
+
+// _finalizeUninitializedArray<A>(_:)
+sil hidden_external [serialized] [readnone] [_semantics "array.finalize_intrinsic"] @$ss27_finalizeUninitializedArrayySayxGABnlF : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0>
+
+// default argument 1 of print(_:separator:terminator:)
+sil hidden_external [serialized] @$ss5print_9separator10terminatoryypd_S2StFfA0_ : $@convention(thin) () -> @owned String
+
+// default argument 2 of print(_:separator:terminator:)
+sil hidden_external [serialized] @$ss5print_9separator10terminatoryypd_S2StFfA1_ : $@convention(thin) () -> @owned String
+
+// print(_:separator:terminator:)
+sil @$ss5print_9separator10terminatoryypd_S2StF : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> ()
+
+
+
+// Mappings from '#fileID' to '#filePath':
+//   'main/main.swift' => 'main.swift'
+
+
